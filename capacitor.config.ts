@@ -4,7 +4,10 @@ const config: CapacitorConfig = {
   appId: 'com.saad.falldownball',
   appName: 'FallDownBall',
   webDir: 'www',
-  server: { androidScheme: 'https' }
+  ios: {
+    contentInset: 'always',
+    scheme: 'FallDownBall'
+  }
 };
 
 export default config;
