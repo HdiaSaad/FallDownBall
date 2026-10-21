@@ -1,4 +1,4 @@
-export const environment = {
+export const environment: { production: boolean; admob: { appId: string; banner: string; interstitial: string; rewarded: string } } = {
   production: false,
   admob: {
     appId:         'ca-app-pub-3940256099942544~1458002511',

@@ -5,7 +5,7 @@ import {
 } from '@capacitor-community/admob';
 import { Device } from '@capacitor/device';
 import { Capacitor } from '@capacitor/core';
-import { environment } from 'src/environments/environment';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AdsService {
@@ -18,10 +18,9 @@ export class AdsService {
     const info = await Device.getInfo();
     this.isIPad = info.model.toLowerCase().includes('ipad');
     await AdMob.initialize({
-      requestTrackingAuthorization: true,
       testingDevices: [],
       initializeForTesting: true,
-    });
+    } as any);
     this.initialized = true;
   }
 
