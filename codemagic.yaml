@@ -1,0 +1,48 @@
+workflows:
+  ios-unsigned:
+    name: iOS unsigned (sideloadly)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      node: 20.11.0
+      xcode: latest
+    scripts:
+      - name: Install node deps
+        script: npm ci
+      - name: Build web bundle
+        script: npm run build
+      - name: Capacitor sync iOS
+        script: npx cap sync ios
+      - name: Resolve Swift packages
+        script: |
+          cd ios/App
+          xcodebuild -resolvePackageDependencies -project App.xcodeproj -scheme App
+      - name: Build unsigned archive
+        script: |
+          cd ios/App
+          xcodebuild archive \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$CM_BUILD_DIR/App.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER=""
+      - name: Package unsigned .ipa for Sideloadly
+        script: |
+          cd "$CM_BUILD_DIR"
+          mkdir -p Payload
+          cp -R App.xcarchive/Products/Applications/App.app Payload/
+          zip -qry FallDownBall-unsigned.ipa Payload
+          rm -rf Payload
+    artifacts:
+      - $CM_BUILD_DIR/FallDownBall-unsigned.ipa
+    publishing:
+      email:
+        recipients:
+          - saad.hdia@gmail.com
+        notify:
+          success: true
+          failure: true
