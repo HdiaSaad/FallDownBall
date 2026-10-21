@@ -1,0 +1,32 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start"><ion-back-button defaultHref="/"></ion-back-button></ion-buttons>
+    <ion-title>Settings</ion-title>
+  </ion-toolbar>
+</ion-header>
+<ion-content [fullscreen]="true">
+  <ion-list inset="true">
+    <ion-item>
+      <ion-label>Sound</ion-label>
+      <ion-toggle slot="end" [checked]="settings.sound()"
+                  (ionChange)="update('sound', $event.detail.checked)"></ion-toggle>
+    </ion-item>
+    <ion-item>
+      <ion-label>Music</ion-label>
+      <ion-toggle slot="end" [checked]="settings.music()"
+                  (ionChange)="update('music', $event.detail.checked)"></ion-toggle>
+    </ion-item>
+    <ion-item>
+      <ion-label>Vibration</ion-label>
+      <ion-toggle slot="end" [checked]="settings.vibration()"
+                  (ionChange)="update('vibration', $event.detail.checked)"></ion-toggle>
+    </ion-item>
+  </ion-list>
+  <ion-list inset="true">
+    <ion-radio-group [value]="settings.controlMode()"
+                     (ionChange)="update('controlMode', $event.detail.value)">
+      <ion-item><ion-radio value="touch">Touch controls</ion-radio></ion-item>
+      <ion-item><ion-radio value="tilt">Tilt controls</ion-radio></ion-item>
+    </ion-radio-group>
+  </ion-list>
+</ion-content>
