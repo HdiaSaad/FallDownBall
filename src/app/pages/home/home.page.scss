@@ -1,0 +1,15 @@
+.home-content { --background: linear-gradient(#0a0f1c, #1a1030); }
+.home-wrap {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100%; padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
+  gap: 32px;
+}
+.logo { color: #fff; font-size: 48px; margin: 0; }
+.logo span { color: #4fc3f7; }
+.stats { display: flex; gap: 24px; }
+.stat { display: flex; flex-direction: column; align-items: center; color: #eee; }
+.stat .label { font-size: 12px; opacity: .6; }
+.stat .value { font-size: 24px; font-weight: 700; }
+.play-btn { width: 220px; --background: #ffd54f; --color: #000; font-weight: 700; }
+.icon-row { display: flex; gap: 16px; }
+.icon-row ion-icon { color: #fff; font-size: 28px; }
