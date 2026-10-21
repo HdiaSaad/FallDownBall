@@ -1,0 +1,13 @@
+.over-content { --background: linear-gradient(#1a0a1c, #0a0f1c); }
+.over-wrap {
+  display: flex; flex-direction: column; justify-content: center;
+  min-height: 100%; padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
+  gap: 16px; color: #fff;
+}
+.record { color: #ffd54f; font-weight: 700; text-align: center; animation: pulse 1s infinite alternate; }
+h1 { text-align: center; margin: 0; font-size: 36px; }
+.stats { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.stats div { display: flex; gap: 8px; font-size: 18px; }
+.stats span { opacity: .7; width: 60px; text-align: right; }
+.revive-btn { --background: #ff6e6e; --color: #fff; font-weight: 700; }
+@keyframes pulse { to { opacity: .5; } }

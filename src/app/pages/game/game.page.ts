@@ -56,6 +56,8 @@ export class GamePage implements OnDestroy {
       }
     });
     this.hookInputs(canvas);
+    const st = history.state as any;
+    if (st?.revive) this.engine.revive();
   }
 
   private hookInputs(canvas: HTMLCanvasElement) {

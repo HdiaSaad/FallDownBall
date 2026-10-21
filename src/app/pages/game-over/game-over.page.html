@@ -1,0 +1,23 @@
+<ion-content [fullscreen]="true" class="over-content">
+  <div class="over-wrap">
+    @if (newRecord) { <div class="record">★ NEW RECORD ★</div> }
+    <h1>Game Over</h1>
+    <div class="stats">
+      <div><span>Score</span><b>{{ score }}</b></div>
+      <div><span>Best</span><b>{{ wallet.best() }}</b></div>
+      <div><span>Coins</span><b>+{{ coins }} ({{ wallet.coins() }})</b></div>
+    </div>
+    @if (reviveAvailable) {
+      <ion-button class="revive-btn" (click)="revive()" [disabled]="reviving">
+        <ion-icon slot="start" name="videocam-outline"></ion-icon>
+        Watch Ad to Continue
+      </ion-button>
+    }
+    <ion-button expand="block" (click)="replay()">
+      <ion-icon slot="start" name="refresh-outline"></ion-icon> Replay
+    </ion-button>
+    <ion-button expand="block" fill="outline" (click)="home()">
+      <ion-icon slot="start" name="home-outline"></ion-icon> Home
+    </ion-button>
+  </div>
+</ion-content>
