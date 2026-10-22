@@ -11,6 +11,9 @@ import { addIcons } from 'ionicons';
 import { videocamOutline, giftOutline } from 'ionicons/icons';
 import { GiftService, PRIZE_TABLE } from '../../core/services/gift.service';
 import { WalletService } from '../../core/services/wallet.service';
+import { AudioService } from '../../core/services/audio.service';
+
+interface Confetto { x: number; y: number; vx: number; vy: number; life: number; color: string; }
 
 @Component({
   selector: 'app-gift',
@@ -23,12 +26,16 @@ export class GiftPage implements OnInit, OnDestroy {
   @ViewChild('wheel', { static: true }) wheelRef!: ElementRef<HTMLCanvasElement>;
   gift = inject(GiftService);
   wallet = inject(WalletService);
+  private audio = inject(AudioService);
   prizes = PRIZE_TABLE;
   rotation = 0;
   spinning = signal(false);
   lastWon = signal<number | null>(null);
+  celebrating = signal(false);
   countdown = signal('');
   private tickId = 0;
+  private confetti: Confetto[] = [];
+  private confettiRafId = 0;
 
   constructor() { addIcons({ videocamOutline, giftOutline }); }
 
@@ -37,7 +44,10 @@ export class GiftPage implements OnInit, OnDestroy {
     this.updateCountdown();
     this.tickId = window.setInterval(() => this.updateCountdown(), 1000) as unknown as number;
   }
-  ngOnDestroy() { clearInterval(this.tickId); }
+  ngOnDestroy() {
+    clearInterval(this.tickId);
+    cancelAnimationFrame(this.confettiRafId);
+  }
 
   private updateCountdown() {
     const ms = this.gift.msUntilNextClaim();
@@ -77,11 +87,46 @@ export class GiftPage implements OnInit, OnDestroy {
     ctx.lineTo(cv.width / 2 + 10, 0);
     ctx.lineTo(cv.width / 2, 20);
     ctx.closePath(); ctx.fill();
+    for (const c of this.confetti) {
+      ctx.fillStyle = c.color;
+      ctx.globalAlpha = Math.max(0, c.life / 60);
+      ctx.fillRect(c.x, c.y, 4, 4);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  private celebrate(prize: number) {
+    this.lastWon.set(prize);
+    this.celebrating.set(true);
+    this.audio.play('win');
+    const colors = ['#ffd54f', '#ff6e6e', '#4fe3c1', '#b388ff', '#4fc3f7', '#ffffff'];
+    const cv = this.wheelRef.nativeElement;
+    const cx = cv.width / 2, cy = cv.height / 2;
+    for (let i = 0; i < 60; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const s = 2 + Math.random() * 5;
+      this.confetti.push({
+        x: cx, y: cy,
+        vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+        life: 45 + Math.random() * 25,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      });
+    }
+    const tick = () => {
+      for (const c of this.confetti) { c.x += c.vx; c.y += c.vy; c.vy += 0.12; c.life--; }
+      this.confetti = this.confetti.filter(c => c.life > 0);
+      this.drawWheel(this.rotation);
+      if (this.confetti.length) this.confettiRafId = requestAnimationFrame(tick);
+      else this.celebrating.set(false);
+    };
+    this.confettiRafId = requestAnimationFrame(tick);
   }
 
   async spin() {
     if (!this.gift.canClaim() || this.spinning()) return;
     this.spinning.set(true);
+    this.lastWon.set(null);
+    this.audio.play('spin');
     const prize = await this.gift.spinWheel();
     const idx = this.prizes.indexOf(prize);
     const target = -((idx + 0.5) / this.prizes.length) * Math.PI * 2 - Math.PI / 2;
@@ -93,7 +138,7 @@ export class GiftPage implements OnInit, OnDestroy {
       this.rotation = eased * (target + Math.PI * 8);
       this.drawWheel(this.rotation);
       if (t < 1) requestAnimationFrame(animate);
-      else { this.spinning.set(false); this.lastWon.set(prize); }
+      else { this.spinning.set(false); this.celebrate(prize); }
     };
     requestAnimationFrame(animate);
   }
@@ -101,8 +146,9 @@ export class GiftPage implements OnInit, OnDestroy {
   async freeGift() {
     if (this.spinning()) return;
     this.spinning.set(true);
+    this.audio.play('spin');
     const prize = await this.gift.claimFreeGift();
     this.spinning.set(false);
-    if (prize > 0) this.lastWon.set(prize);
+    if (prize > 0) this.celebrate(prize);
   }
 }

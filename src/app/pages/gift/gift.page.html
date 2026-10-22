@@ -8,7 +8,7 @@
   <div class="gift-wrap">
     <canvas #wheel width="280" height="280" class="wheel"></canvas>
     <p class="countdown">Next spin in : <b>{{ countdown() }}</b></p>
-    @if (lastWon() !== null) { <p class="won">You won {{ lastWon() }} coins! ✨</p> }
+    @if (lastWon() !== null) { <p class="won" [class.celebrating]="celebrating()">You won {{ lastWon() }} coins! ✨</p> }
     <ion-button expand="block" (click)="spin()" [disabled]="!gift.canClaim() || spinning()">
       <ion-icon slot="start" name="gift-outline"></ion-icon> Daily spin
     </ion-button>

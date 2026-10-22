@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonContent } from '@ionic/angular/ion-content';
 import { IonButton } from '@ionic/angular/ion-button';
@@ -10,6 +10,7 @@ import { GameEngine } from '../../core/game/game-engine';
 import { WalletService } from '../../core/services/wallet.service';
 import { SettingsService } from '../../core/services/settings.service';
 import { AdsService } from '../../core/services/ads.service';
+import { AudioService } from '../../core/services/audio.service';
 
 @Component({
   selector: 'app-game',
@@ -20,10 +21,14 @@ import { AdsService } from '../../core/services/ads.service';
 })
 export class GamePage implements OnDestroy {
   @ViewChild('cv', { static: true }) cvRef!: ElementRef<HTMLCanvasElement>;
-  engine!: GameEngine;
+  private engineSig = signal<GameEngine | null>(null);
+  get engine(): GameEngine { return this.engineSig()!; }
+  score = computed(() => this.engineSig()?.score() ?? 0);
+  coins = computed(() => this.engineSig()?.coins() ?? 0);
   wallet = inject(WalletService);
   settings = inject(SettingsService);
   private ads = inject(AdsService);
+  private audio = inject(AudioService);
   private router = inject(Router);
   paused = signal(false);
 
@@ -36,15 +41,17 @@ export class GamePage implements OnDestroy {
     canvas.getContext('2d')!.scale(dpr, dpr);
 
     this.ads.hideBanner();
-    this.engine = new GameEngine(canvas, {
+    const engine = new GameEngine(canvas, {
       skinId: this.wallet.equippedSkin(),
       sound:  this.settings.sound(),
       onSoundEvent: (name) => {
+        this.audio.play(name);
         if (name === 'death' && this.settings.vibration()) Haptics.impact({ style: ImpactStyle.Heavy });
         if (name === 'coin'  && this.settings.vibration()) Haptics.impact({ style: ImpactStyle.Light });
       },
     });
-    this.engine.events$.subscribe(ev => {
+    this.engineSig.set(engine);
+    engine.events$.subscribe(ev => {
       if (ev.kind === 'coin')   this.wallet.addCoins(1);
       if (ev.kind === 'gameOver') {
         const { newRecord } = this.wallet.submitScore(ev.score);
@@ -57,7 +64,7 @@ export class GamePage implements OnDestroy {
     });
     this.hookInputs(canvas);
     const st = history.state as any;
-    if (st?.revive) this.engine.revive();
+    if (st?.revive) engine.revive();
   }
 
   private hookInputs(canvas: HTMLCanvasElement) {

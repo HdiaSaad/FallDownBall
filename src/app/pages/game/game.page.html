@@ -1,7 +1,7 @@
 <ion-content [fullscreen]="true" class="game-content">
   <div class="hud">
-    <span>Score <b>{{ engine?.score() ?? 0 }}</b></span>
-    <span>Coins <b>{{ engine?.coins() ?? 0 }}</b></span>
+    <span>Score <b>{{ score() }}</b></span>
+    <span>Coins <b>{{ coins() }}</b></span>
     <ion-button fill="clear" (click)="togglePause()">
       <ion-icon slot="icon-only" [name]="paused() ? 'play-outline' : 'pause-outline'"></ion-icon>
     </ion-button>
