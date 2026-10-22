@@ -44,10 +44,11 @@ ion-header ion-toolbar {
   --padding-bottom: 0;
   --padding-start: 4px;
   --padding-end: 4px;
-  --background: transparent;
+  --background: #0f0f1a;
   --border-width: 0;
   --color: #fff;
 }
+ion-header { background: #0f0f1a; }
 ion-header ion-toolbar ion-title {
   font-size: 15px;
   padding-inline: 8px;

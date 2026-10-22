@@ -2,6 +2,7 @@ import { ApplicationConfig, APP_INITIALIZER, inject } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideIonicAngular } from '@ionic/angular/provide';
 import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { routes } from './app.routes';
 import { SettingsService } from './core/services/settings.service';
 import { WalletService } from './core/services/wallet.service';
@@ -15,7 +16,13 @@ export function initAll() {
     const gift     = inject(GiftService);
     const ads      = inject(AdsService);
     await Promise.all([settings.load(), wallet.load(), gift.load()]);
-    if (Capacitor.isNativePlatform()) await ads.init();
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await StatusBar.setOverlaysWebView({ overlay: false });
+        await StatusBar.setStyle({ style: Style.Dark });
+      } catch {}
+      await ads.init();
+    }
   };
 }
 

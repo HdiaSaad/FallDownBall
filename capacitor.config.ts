@@ -4,9 +4,11 @@ const config: CapacitorConfig = {
   appId: 'com.saad.skyfallball',
   appName: 'SkyFallBall',
   webDir: 'www',
+  backgroundColor: '#0f0f1aff',
   ios: {
     contentInset: 'always',
-    scheme: 'SkyFallBall'
+    scheme: 'SkyFallBall',
+    backgroundColor: '#0f0f1aff'
   },
   plugins: {
     SplashScreen: {
