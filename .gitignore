@@ -7,3 +7,5 @@ ios/App/build/
 ios/DerivedData/
 .DS_Store
 *.log
+.claude/
+resources/

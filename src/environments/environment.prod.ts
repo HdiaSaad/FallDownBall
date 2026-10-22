@@ -1,9 +1,9 @@
 export const environment = {
   production: true,
   admob: {
-    appId:         'ca-app-pub-3940256099942544~1458002511',
-    banner:        'ca-app-pub-3940256099942544/2934735716',
-    interstitial:  'ca-app-pub-3940256099942544/4411468910',
-    rewarded:      'ca-app-pub-3940256099942544/1712485313',
+    appId:         'ca-app-pub-1958817675761413~8609085851',
+    banner:        'ca-app-pub-1958817675761413/7104432490',
+    interstitial:  'ca-app-pub-1958817675761413/4050234608',
+    rewarded:      'ca-app-pub-1958817675761413/7524988917',
   }
 };

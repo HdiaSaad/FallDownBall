@@ -1,12 +1,12 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.saad.falldownball',
-  appName: 'FallDownBall',
+  appId: 'com.saad.skyfallball',
+  appName: 'SkyFallBall',
   webDir: 'www',
   ios: {
     contentInset: 'always',
-    scheme: 'FallDownBall'
+    scheme: 'SkyFallBall'
   }
 };
 

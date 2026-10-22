@@ -35,10 +35,10 @@ workflows:
           cd "$CM_BUILD_DIR"
           mkdir -p Payload
           cp -R App.xcarchive/Products/Applications/App.app Payload/
-          zip -qry FallDownBall-unsigned.ipa Payload
+          zip -qry SkyFallBall-unsigned.ipa Payload
           rm -rf Payload
     artifacts:
-      - $CM_BUILD_DIR/FallDownBall-unsigned.ipa
+      - $CM_BUILD_DIR/SkyFallBall-unsigned.ipa
     publishing:
       email:
         recipients:

@@ -1,5 +1,5 @@
 {
-  "name": "FallDownBall",
+  "name": "SkyFallBall",
   "version": "0.0.1",
   "author": "Ionic Framework",
   "homepage": "https://ionicframework.com/",
@@ -40,6 +40,7 @@
     "@angular/cli": "22.1.8",
     "@angular/compiler-cli": "22.1.7",
     "@angular/language-service": "22.1.7",
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "8.5.3",
     "@ionic/angular-toolkit": "^13.0.0",
     "angular-eslint": "22.5.0",
