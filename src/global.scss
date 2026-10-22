@@ -35,3 +35,22 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
+
+ion-header ion-toolbar {
+  --min-height: 36px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 4px;
+  --padding-end: 4px;
+  --background: #0f0f1a;
+  --color: #fff;
+}
+ion-header ion-toolbar ion-title {
+  font-size: 16px;
+  padding-inline: 8px;
+}
+ion-header ion-toolbar ion-back-button {
+  --min-height: 32px;
+  --padding-start: 4px;
+  --padding-end: 4px;
+}

@@ -40,6 +40,9 @@ export class GameEngine {
   private rafId = 0;
   private keys = { l: false, r: false };
   private tiltVx = 0;
+  private belowFrames = 0;
+  private belowAwarded = 0;
+  private floatTexts: Array<{x:number;y:number;vy:number;life:number;max:number;text:string;color:string}> = [];
 
   constructor(private canvas: HTMLCanvasElement, private opts: GameEngineOpts) {
     this.ctx = canvas.getContext('2d')!;
@@ -57,6 +60,8 @@ export class GameEngine {
     this.boards = []; this.props = []; this.particles = [];
     this.laserY = -30; this.scrollSpeed = 1.1; this.tFrame = 0;
     this.saveUsed = false;
+    this.belowFrames = 0; this.belowAwarded = 0;
+    this.floatTexts = [];
     this.score.set(0); this.coins.set(0); this.state.set('playing');
     for (let y = 220; y < H + 220; y += 95) this.spawnBoard(y);
   }
@@ -98,6 +103,11 @@ export class GameEngine {
         : gapX + GAP_W + Math.random() * (W - gapX - GAP_W - 20) + 10;
       this.props.push({ x: sideX, y: y - 18, r: 9, kind });
     }
+  }
+
+  private spawnFloatText(text: string, x: number, y: number) {
+    const life = 90;
+    this.floatTexts.push({ x, y, vy: -1.4, life, max: life, text, color: '#ffd54f' });
   }
 
   private burst(x: number, y: number, color: string, n = 10) {
@@ -206,8 +216,27 @@ export class GameEngine {
       }
     }
 
-    // fell past bottom (outran the scroll)
-    if (this.hero.y - this.hero.r > H) this.kill();
+    // outran the scroll — bonus: +N per second while off-bottom, hero rides the edge
+    const edgeY = H + this.hero.r;
+    if (this.hero.y > edgeY) {
+      this.hero.y = edgeY;
+      if (this.hero.vy > 0) this.hero.vy = 0;
+      this.belowFrames++;
+      const awardable = Math.floor(this.belowFrames / 60);
+      while (this.belowAwarded < awardable) {
+        this.belowAwarded++;
+        this.score.update(s => s + this.belowAwarded);
+        this.spawnFloatText(`+${this.belowAwarded}`, W/2, H/2 - 20);
+        this.opts.onSoundEvent?.('bonus');
+      }
+    } else {
+      this.belowFrames = 0;
+      this.belowAwarded = 0;
+    }
+
+    // float texts
+    for (const t of this.floatTexts) { t.y += t.vy; t.life--; }
+    this.floatTexts = this.floatTexts.filter(t => t.life > 0);
 
     this.scrollSpeed += 0.00045;
   }
@@ -299,6 +328,26 @@ export class GameEngine {
       ctx.fillStyle = q.color;
       ctx.globalAlpha = Math.max(0, q.life / 30);
       ctx.fillRect(q.x, q.y, 3, 3);
+    }
+    ctx.globalAlpha = 1;
+
+    // floating bonus labels
+    for (const t of this.floatTexts) {
+      const prog = 1 - t.life / t.max;
+      const scale = prog < 0.2 ? 0.5 + prog * 2.5 : 1 + Math.sin(prog * Math.PI) * 0.1;
+      ctx.save();
+      ctx.globalAlpha = t.life > 30 ? 1 : t.life / 30;
+      ctx.translate(t.x, t.y);
+      ctx.scale(scale, scale);
+      ctx.font = 'bold 42px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+      ctx.strokeText(t.text, 0, 0);
+      ctx.fillStyle = t.color;
+      ctx.fillText(t.text, 0, 0);
+      ctx.restore();
     }
     ctx.globalAlpha = 1;
   }
