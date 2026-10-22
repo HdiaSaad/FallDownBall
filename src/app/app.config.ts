@@ -19,7 +19,7 @@ export function initAll() {
     if (Capacitor.isNativePlatform()) {
       try {
         await StatusBar.setOverlaysWebView({ overlay: false });
-        await StatusBar.setStyle({ style: Style.Dark });
+        await StatusBar.setStyle({ style: Style.Light });
       } catch {}
       await ads.init();
     }

@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'www',
   backgroundColor: '#0f0f1aff',
   ios: {
-    contentInset: 'always',
+    contentInset: 'never',
     scheme: 'SkyFallBall',
     backgroundColor: '#0f0f1aff'
   },
