@@ -21,6 +21,7 @@ const W = 360, H = 640;
 const G = 0.36, TERMINAL = 8.5, MOVE = 4.2;
 const GAP_W = 72, BOARD_H = 7;
 const SKINS = ['#ff5f6d','#ff6e6e','#4fe3c1','#b388ff','#ffa94d'];
+const COLOR_CYCLE = ['#ffd54f','#4fc3f7','#b388ff','#4fe3c1','#ff2d55','#ffab40','#64ffda','#f06292','#9ccc65','#ff6a00'];
 
 export class GameEngine {
   readonly score = signal(0);
@@ -71,6 +72,12 @@ export class GameEngine {
     this.laserY = -40;
     this.saveUsed = true;
     this.state.set('playing');
+    this.opts.onSoundEvent?.('revive');
+  }
+  seedForRevive(score: number, coins: number) {
+    this.score.set(score);
+    this.coins.set(coins);
+    this.saveUsed = true;
     this.opts.onSoundEvent?.('revive');
   }
   destroy() { cancelAnimationFrame(this.rafId); this.events$.complete(); }
@@ -310,7 +317,10 @@ export class GameEngine {
       }
     }
     // ball — radial-gradient sphere with highlight, outline, inner shadow
-    const base = SKINS[h.skinId % SKINS.length];
+    const s = this.score();
+    const base = s < 100
+      ? SKINS[h.skinId % SKINS.length]
+      : COLOR_CYCLE[(Math.floor(s / 100) - 1) % COLOR_CYCLE.length];
     const grad = ctx.createRadialGradient(h.x - h.r*0.35, h.y - h.r*0.4, h.r*0.15, h.x, h.y, h.r);
     grad.addColorStop(0, '#ffffff');
     grad.addColorStop(0.35, base);

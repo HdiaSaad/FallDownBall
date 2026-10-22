@@ -36,21 +36,24 @@
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
 
+ion-header { box-shadow: none; }
+ion-header::after { display: none !important; background: none !important; }
 ion-header ion-toolbar {
-  --min-height: 36px;
+  --min-height: 32px;
   --padding-top: 0;
   --padding-bottom: 0;
   --padding-start: 4px;
   --padding-end: 4px;
-  --background: #0f0f1a;
+  --background: transparent;
+  --border-width: 0;
   --color: #fff;
 }
 ion-header ion-toolbar ion-title {
-  font-size: 16px;
+  font-size: 15px;
   padding-inline: 8px;
 }
 ion-header ion-toolbar ion-back-button {
-  --min-height: 32px;
+  --min-height: 28px;
   --padding-start: 4px;
   --padding-end: 4px;
 }

@@ -64,7 +64,7 @@ export class GamePage implements OnDestroy {
     });
     this.hookInputs(canvas);
     const st = history.state as any;
-    if (st?.revive) engine.revive();
+    if (st?.revive) engine.seedForRevive(st.score ?? 0, st.coins ?? 0);
   }
 
   private hookInputs(canvas: HTMLCanvasElement) {

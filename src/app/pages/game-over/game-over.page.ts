@@ -43,7 +43,9 @@ export class GameOverPage implements OnInit {
     if (ok) {
       this.reviveAvailable = false;
       this.ads.hideBanner();
-      this.router.navigate(['/game'], { state: { revive: true } });
+      this.router.navigate(['/game'], {
+        state: { revive: true, score: this.score, coins: this.coins }
+      });
     }
   }
 }
