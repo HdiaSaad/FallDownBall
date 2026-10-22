@@ -21,6 +21,12 @@ export class AdsService {
       testingDevices: [],
       initializeForTesting: true,
     } as any);
+    try {
+      const tracking = await AdMob.trackingAuthorizationStatus();
+      if (tracking.status === 'notDetermined') {
+        await AdMob.requestTrackingAuthorization();
+      }
+    } catch (e) { console.warn('ATT request failed', e); }
     this.initialized = true;
   }
 
@@ -30,10 +36,10 @@ export class AdsService {
       adId: environment.admob.banner,
       adSize: this.isIPad ? BannerAdSize.LARGE_BANNER : BannerAdSize.BANNER,
       position: BannerAdPosition.BOTTOM_CENTER,
-      margin: 0,
+      margin: 36,
       isTesting: true,
     };
-    try { await AdMob.showBanner(opts); }
+    try { await AdMob.showBanner(opts); console.log('[ads] banner shown'); }
     catch (e) { console.warn('showBanner failed', e); }
   }
 
