@@ -9,3 +9,4 @@ ios/DerivedData/
 *.log
 .claude/
 resources/
+.playwright-mcp/

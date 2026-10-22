@@ -7,7 +7,19 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'always',
     scheme: 'SkyFallBall'
-  }
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 2500,
+      launchAutoHide: true,
+      backgroundColor: '#0f0f1a',
+      showSpinner: false,
+      androidScaleType: 'CENTER_CROP',
+      iosSpinnerStyle: 'small',
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
+  },
 };
 
 export default config;

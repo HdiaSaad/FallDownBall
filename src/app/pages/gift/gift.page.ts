@@ -124,31 +124,38 @@ export class GiftPage implements OnInit, OnDestroy {
 
   async spin() {
     if (!this.gift.canClaim() || this.spinning()) return;
-    this.spinning.set(true);
-    this.lastWon.set(null);
-    this.audio.play('spin');
     const prize = await this.gift.spinWheel();
-    const idx = this.prizes.indexOf(prize);
-    const target = -((idx + 0.5) / this.prizes.length) * Math.PI * 2 - Math.PI / 2;
-    const start = performance.now();
-    const dur = 3000;
-    const animate = (now: number) => {
-      const t = Math.min(1, (now - start) / dur);
-      const eased = 1 - Math.pow(1 - t, 3);
-      this.rotation = eased * (target + Math.PI * 8);
-      this.drawWheel(this.rotation);
-      if (t < 1) requestAnimationFrame(animate);
-      else { this.spinning.set(false); this.celebrate(prize); }
-    };
-    requestAnimationFrame(animate);
+    await this.animateSpin(prize);
   }
 
   async freeGift() {
     if (this.spinning()) return;
-    this.spinning.set(true);
-    this.audio.play('spin');
     const prize = await this.gift.claimFreeGift();
-    this.spinning.set(false);
-    if (prize > 0) this.celebrate(prize);
+    if (prize > 0) await this.animateSpin(prize);
+  }
+
+  private animateSpin(prize: number): Promise<void> {
+    return new Promise(resolve => {
+      this.spinning.set(true);
+      this.lastWon.set(null);
+      this.audio.play('spin');
+      const idx = this.prizes.indexOf(prize);
+      const target = -((idx + 0.5) / this.prizes.length) * Math.PI * 2 - Math.PI / 2;
+      const start = performance.now();
+      const dur = 3000;
+      const segment = (Math.PI * 2) / this.prizes.length;
+      let lastSeg = Math.floor(this.rotation / segment);
+      const animate = (now: number) => {
+        const t = Math.min(1, (now - start) / dur);
+        const eased = 1 - Math.pow(1 - t, 3);
+        this.rotation = eased * (target + Math.PI * 8);
+        const seg = Math.floor(this.rotation / segment);
+        if (seg !== lastSeg) { this.audio.play('click'); lastSeg = seg; }
+        this.drawWheel(this.rotation);
+        if (t < 1) requestAnimationFrame(animate);
+        else { this.spinning.set(false); this.celebrate(prize); resolve(); }
+      };
+      requestAnimationFrame(animate);
+    });
   }
 }

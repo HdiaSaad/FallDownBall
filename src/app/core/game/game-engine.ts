@@ -20,7 +20,7 @@ export type GameEvent =
 const W = 360, H = 640;
 const G = 0.36, TERMINAL = 8.5, MOVE = 4.2;
 const GAP_W = 72, BOARD_H = 7;
-const SKINS = ['#ffd54f','#ff6e6e','#4fe3c1','#b388ff','#ffa94d'];
+const SKINS = ['#ff5f6d','#ff6e6e','#4fe3c1','#b388ff','#ffa94d'];
 
 export class GameEngine {
   readonly score = signal(0);
@@ -69,6 +69,15 @@ export class GameEngine {
     this.opts.onSoundEvent?.('revive');
   }
   destroy() { cancelAnimationFrame(this.rafId); this.events$.complete(); }
+
+  private darken(hex: string, amt: number): string {
+    const n = parseInt(hex.slice(1), 16);
+    const r = Math.max(0, ((n >> 16) & 0xff) * (1 - amt));
+    const g = Math.max(0, ((n >>  8) & 0xff) * (1 - amt));
+    const b = Math.max(0, ( n        & 0xff) * (1 - amt));
+    return `rgb(${r|0},${g|0},${b|0})`;
+  }
+
   setInput(left: boolean, right: boolean) { this.keys.l = left; this.keys.r = right; }
   setTilt(gamma: number) {
     // gamma -90..90 → vx scaled
@@ -197,6 +206,9 @@ export class GameEngine {
       }
     }
 
+    // fell past bottom (outran the scroll)
+    if (this.hero.y - this.hero.r > H) this.kill();
+
     this.scrollSpeed += 0.00045;
   }
 
@@ -268,9 +280,19 @@ export class GameEngine {
         ctx.stroke();
       }
     }
-    // ball
-    ctx.fillStyle = SKINS[h.skinId % SKINS.length];
+    // ball — radial-gradient sphere with highlight, outline, inner shadow
+    const base = SKINS[h.skinId % SKINS.length];
+    const grad = ctx.createRadialGradient(h.x - h.r*0.35, h.y - h.r*0.4, h.r*0.15, h.x, h.y, h.r);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.35, base);
+    grad.addColorStop(1, this.darken(base, 0.45));
+    ctx.fillStyle = grad;
     ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // specular dot
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath(); ctx.arc(h.x - h.r*0.35, h.y - h.r*0.4, h.r*0.22, 0, Math.PI*2); ctx.fill();
 
     // particles
     for (const q of this.particles) {

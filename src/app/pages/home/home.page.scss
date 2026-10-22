@@ -4,8 +4,31 @@
   min-height: 100%; padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
   gap: 32px;
 }
-.logo { color: #fff; font-size: 48px; margin: 0; }
-.logo span { color: #4fc3f7; }
+.logo-ring {
+  position: relative;
+  width: 220px; height: 220px;
+  display: flex; align-items: center; justify-content: center;
+  animation: logo-float 3s ease-in-out infinite;
+}
+.logo-ring::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #ff6a00, #ffd54f, #ff2d55, #b388ff, #4fc3f7, #ff6a00);
+  box-shadow: 0 0 40px rgba(255, 170, 60, 0.55), 0 0 80px rgba(179, 136, 255, 0.35);
+  animation: ring-spin 8s linear infinite;
+  z-index: 0;
+}
+.logo-img {
+  position: relative; z-index: 1;
+  width: 92%; height: 92%; display: block; border-radius: 50%;
+  object-fit: cover;
+}
+@keyframes ring-spin { to { transform: rotate(360deg); } }
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-8px) scale(1.03); }
+}
 .stats { display: flex; gap: 24px; }
 .stat { display: flex; flex-direction: column; align-items: center; color: #eee; }
 .stat .label { font-size: 12px; opacity: .6; }
