@@ -8,11 +8,18 @@ export function clampX(hero: Hero, worldW: number): void {
   hero.x = Math.max(hero.r, Math.min(worldW - hero.r, hero.x));
 }
 
+// Tolerance must be ≥ max per-frame scroll + gravity delta so a ball resting
+// on a board still collides after the board scrolled past its previous bottom.
+const BOARD_CONTACT_TOLERANCE = 18;
+
 export function collideBoard(hero: Hero, board: Board): boolean {
   const prevBottom = hero.y - hero.vy + hero.r;
   const nowBottom  = hero.y + hero.r;
   const inGap = hero.x > board.gapX && hero.x < board.gapX + board.gapW;
-  return !inGap && prevBottom <= board.y && nowBottom >= board.y;
+  if (inGap) return false;
+  const crossed = prevBottom <= board.y && nowBottom >= board.y;
+  const resting = nowBottom >= board.y && nowBottom <= board.y + BOARD_CONTACT_TOLERANCE;
+  return crossed || resting;
 }
 
 export function collideProp(hero: Hero, prop: Prop): boolean {

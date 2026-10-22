@@ -51,6 +51,14 @@ describe('physics', () => {
       h.vy = 1; // prev-bottom = 119+11-1 = 129 > 100 → no cross
       expect(collideBoard(h, board)).toBe(false);
     });
+
+    it('returns true when hero rests on board after scroll pushed board past bottom', () => {
+      // Hero was snapped to b.y - r last frame, board scrolled up by scrollSpeed,
+      // so hero bottom is now just below board top. Must still collide to stay glued.
+      const h = createHero(10, 90, 0); // bottom = 101, board.y = 100
+      h.vy = 0.36;                     // gravity delta, no cross: prev-bottom = 100.64
+      expect(collideBoard(h, board)).toBe(true);
+    });
   });
 
   describe('collideProp', () => {
