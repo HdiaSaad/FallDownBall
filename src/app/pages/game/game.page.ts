@@ -53,7 +53,8 @@ export class GamePage implements OnDestroy {
     });
     this.engineSig.set(engine);
     engine.events$.subscribe(ev => {
-      if (ev.kind === 'coin')   this.wallet.addCoins(1);
+      if (ev.kind === 'coin')        this.wallet.addCoins(ev.value);
+      if (ev.kind === 'perfectRun')  this.wallet.addCoins(100);
       if (ev.kind === 'gameOver') {
         const { newRecord } = this.wallet.submitScore(ev.score);
         this.ads.showInterstitial().then(() => {

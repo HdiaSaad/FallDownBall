@@ -15,7 +15,8 @@ export interface GameEngineOpts {
 }
 
 export type GameEvent =
-  | { kind: 'coin' | 'shield' | 'magnet' | 'bonus' | 'savedByShield' | 'perfectRun' | 'speedBrick' }
+  | { kind: 'shield' | 'magnet' | 'bonus' | 'savedByShield' | 'perfectRun' | 'speedBrick' }
+  | { kind: 'coin'; value: number }
   | { kind: 'combo'; steps: number }
   | { kind: 'gameOver'; score: number; coins: number; newRecord?: boolean };
 
@@ -272,8 +273,9 @@ export class GameEngine {
     for (const p of this.props) {
       if (collideProp(this.hero, p)) {
         (p as any)._dead = true;
-        if (p.kind === 'coin')   { this.coins.update(c => c + 1); this.burst(p.x,p.y,'#ffd54f',8);
-          this.events$.next({ kind: 'coin' }); this.opts.onSoundEvent?.('coin'); }
+        if (p.kind === 'coin')   { const value = this.comboMulti(); this.coins.update(c => c + value); this.burst(p.x,p.y,'#ffd54f',8);
+          this.spawnFloatText(`+${value}`, p.x, p.y, 28, '#ffd54f');
+          this.events$.next({ kind: 'coin', value }); this.opts.onSoundEvent?.('coin'); }
         if (p.kind === 'shield') { this.hero.shield = 300; this.burst(p.x,p.y,'#4fe3c1',14);
           this.events$.next({ kind: 'shield' }); this.opts.onSoundEvent?.('shield'); }
         if (p.kind === 'magnet') { this.hero.magnet = 300; this.burst(p.x,p.y,'#b388ff',14);
@@ -497,5 +499,21 @@ export class GameEngine {
       ctx.restore();
     }
     ctx.globalAlpha = 1;
+
+    // combo meter (top-right, under score)
+    const multi = this.comboMulti();
+    const frac = this.comboMultiFraction();
+    if (multi > 1 && frac > 0) {
+      const barW = 70, barH = 6, barX = W - 80, barY = 50;
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillRect(barX, barY, barW, barH);
+      ctx.fillStyle = '#ff8a00';
+      ctx.fillRect(barX, barY, barW * frac, barH);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 16px system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(`×${multi}`, W - 8, barY + barH + 14);
+      ctx.textAlign = 'start';
+    }
   }
 }
