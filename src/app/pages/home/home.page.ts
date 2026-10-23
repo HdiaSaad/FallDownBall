@@ -4,10 +4,12 @@ import { IonContent } from '@ionic/angular/ion-content';
 import { IonButton } from '@ionic/angular/ion-button';
 import { IonIcon } from '@ionic/angular/ion-icon';
 import { addIcons } from 'ionicons';
-import { settingsOutline, giftOutline, shirtOutline, trophyOutline, playOutline } from 'ionicons/icons';
+import { settingsOutline, giftOutline, shirtOutline, trophyOutline, playOutline, shareOutline } from 'ionicons/icons';
+import { Share } from '@capacitor/share';
 import { WalletService } from '../../core/services/wallet.service';
 import { AdsService } from '../../core/services/ads.service';
 import { AudioService } from '../../core/services/audio.service';
+import { I18nService } from '../../core/services/i18n.service';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
 import { MissionsPanelComponent } from './missions-panel.component';
 
@@ -20,13 +22,25 @@ import { MissionsPanelComponent } from './missions-panel.component';
 })
 export class HomePage implements OnInit, OnDestroy {
   wallet = inject(WalletService);
+  i18n = inject(I18nService);
   private ads = inject(AdsService);
   private audio = inject(AudioService);
   private router = inject(Router);
   constructor() {
-    addIcons({ settingsOutline, giftOutline, shirtOutline, trophyOutline, playOutline });
+    addIcons({ settingsOutline, giftOutline, shirtOutline, trophyOutline, playOutline, shareOutline });
   }
   ngOnInit() { this.ads.showBanner(); this.audio.initBgm(); }
   ngOnDestroy() { this.ads.hideBanner(); }
   play() { this.router.navigateByUrl('/game'); }
+
+  async shareBest() {
+    if (this.wallet.best() <= 0) return;
+    try {
+      await Share.share({
+        title: 'SkyFallBall',
+        text: this.i18n.t('share.textBest', { score: this.wallet.best(), storeUrl: '' }),
+        dialogTitle: this.i18n.t('share.dialog'),
+      });
+    } catch { /* ignore */ }
+  }
 }

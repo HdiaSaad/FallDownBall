@@ -4,9 +4,11 @@ import { IonContent } from '@ionic/angular/ion-content';
 import { IonButton } from '@ionic/angular/ion-button';
 import { IonIcon } from '@ionic/angular/ion-icon';
 import { addIcons } from 'ionicons';
-import { refreshOutline, homeOutline, videocamOutline } from 'ionicons/icons';
+import { refreshOutline, homeOutline, videocamOutline, shareOutline } from 'ionicons/icons';
+import { Share } from '@capacitor/share';
 import { WalletService } from '../../core/services/wallet.service';
 import { AdsService } from '../../core/services/ads.service';
+import { I18nService } from '../../core/services/i18n.service';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
 
 @Component({
@@ -18,13 +20,14 @@ import { TranslatePipe } from '../../core/pipes/translate.pipe';
 })
 export class GameOverPage implements OnInit {
   wallet = inject(WalletService);
+  i18n = inject(I18nService);
   private ads = inject(AdsService);
   private router = inject(Router);
   score = 0; coins = 0; newRecord = false;
   reviveAvailable = true;
   reviving = false;
 
-  constructor() { addIcons({ refreshOutline, homeOutline, videocamOutline }); }
+  constructor() { addIcons({ refreshOutline, homeOutline, videocamOutline, shareOutline }); }
 
   ngOnInit() {
     const st = history.state as any;
@@ -36,6 +39,16 @@ export class GameOverPage implements OnInit {
 
   replay() { this.router.navigateByUrl('/game'); }
   home()   { this.ads.hideBanner(); this.router.navigateByUrl('/'); }
+
+  async share() {
+    try {
+      await Share.share({
+        title: 'SkyFallBall',
+        text: this.i18n.t('share.text', { score: this.score, storeUrl: '' }),
+        dialogTitle: this.i18n.t('share.dialog'),
+      });
+    } catch { /* user canceled or unavailable */ }
+  }
 
   async revive() {
     this.reviving = true;

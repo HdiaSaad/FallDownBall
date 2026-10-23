@@ -11,6 +11,9 @@
       <div class="stat">
         <span class="label">{{ 'common.best' | translate }}</span>
         <span class="value">{{ wallet.best() }}</span>
+        <ion-button fill="clear" size="small" (click)="shareBest()" [disabled]="wallet.best() === 0">
+          <ion-icon slot="icon-only" name="share-outline"></ion-icon>
+        </ion-button>
       </div>
     </div>
     <app-missions-panel></app-missions-panel>

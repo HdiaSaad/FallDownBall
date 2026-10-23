@@ -94,6 +94,10 @@ const T: Record<string, Record<Locale, string>> = {
   'tutorial.step2':  { en: 'Fall through the gaps. Avoid the red laser!',   fr: 'Chute dans les trous. Évite le laser rouge !' },
   'tutorial.step3':  { en: 'Collect blue shields and purple magnets.',      fr: 'Ramasse les boucliers bleus et aimants violets.' },
   'tutorial.step4':  { en: 'Yellow bricks give bonus. Green bricks boost speed.', fr: 'Les briques jaunes donnent un bonus. Les vertes accélèrent la balle.' },
+  'share.text':     { en: '🎮 I scored {score} in SkyFallBall! Can you beat me? 👉 {storeUrl}', fr: '🎮 J\'ai fait {score} à SkyFallBall ! Peux-tu me battre ? 👉 {storeUrl}' },
+  'share.textBest': { en: '🏆 My record in SkyFallBall is {score}! Beat me 👉 {storeUrl}',     fr: '🏆 Mon record à SkyFallBall est {score} ! Bats-moi 👉 {storeUrl}' },
+  'share.dialog':   { en: 'Share my score',  fr: 'Partager mon score' },
+  'share.button':   { en: 'Share',           fr: 'Partager' },
 };
 
 @Injectable({ providedIn: 'root' })
