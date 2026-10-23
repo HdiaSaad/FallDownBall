@@ -9,6 +9,9 @@ import { WalletService } from './core/services/wallet.service';
 import { GiftService } from './core/services/gift.service';
 import { AdsService } from './core/services/ads.service';
 import { I18nService } from './core/services/i18n.service';
+import { AchievementService } from './core/services/achievement.service';
+import { MissionsService } from './core/services/missions.service';
+import { TutorialService } from './core/services/tutorial.service';
 
 export function initAll() {
   return async () => {
@@ -17,7 +20,18 @@ export function initAll() {
     const gift     = inject(GiftService);
     const ads      = inject(AdsService);
     const i18n     = inject(I18nService);
-    await Promise.all([settings.load(), wallet.load(), gift.load(), i18n.load()]);
+    const achievements = inject(AchievementService);
+    const missions = inject(MissionsService);
+    const tutorial = inject(TutorialService);
+    await Promise.all([
+      settings.load(),
+      wallet.load(),
+      gift.load(),
+      i18n.load(),
+      achievements.load(),
+      missions.load(),
+      tutorial.load(),
+    ]);
     if (Capacitor.isNativePlatform()) {
       try {
         await StatusBar.setOverlaysWebView({ overlay: false });
