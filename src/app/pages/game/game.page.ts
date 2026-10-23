@@ -189,10 +189,14 @@ export class GamePage implements OnDestroy {
       }
     };
     const onUp = () => { keys.l = keys.r = false; this.engine.setInput(false, false); };
-    canvas.addEventListener('pointerdown', e => onDown(e.clientX));
-    canvas.addEventListener('pointerup', onUp);
-    canvas.addEventListener('pointercancel', onUp);
+    canvas.addEventListener('pointerdown', e => { e.preventDefault(); onDown(e.clientX); });
+    canvas.addEventListener('pointerup', e => { e.preventDefault(); onUp(); });
+    canvas.addEventListener('pointercancel', e => { e.preventDefault(); onUp(); });
     canvas.addEventListener('pointerleave', onUp);
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+    canvas.addEventListener('gesturestart', e => e.preventDefault());
+    canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+    canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
     document.addEventListener('keydown', e => {
       if (e.key === 'ArrowLeft')  { keys.l = true;  this.engine.setInput(keys.l, keys.r); }
       if (e.key === 'ArrowRight') { keys.r = true;  this.engine.setInput(keys.l, keys.r); }

@@ -12,9 +12,11 @@ export type SoundName =
 export class AudioService {
   private settings = inject(SettingsService);
   private ctx?: AudioContext;
-  private bgm?: HTMLAudioElement;
+  private bgmBuffer: AudioBuffer | null = null;
+  private bgmSource: AudioBufferSourceNode | null = null;
+  private bgmGain: GainNode | null = null;
   private bgmReady = false;
-
+  private bgmLoading = false;
   private backgrounded = false;
 
   constructor() {
@@ -44,31 +46,46 @@ export class AudioService {
     });
   }
 
-  initBgm(): void {
-    if (this.bgm) return;
-    const a = new Audio('assets/audio/bgm.mp3');
-    a.loop = true;
-    a.volume = 0.20;
-    a.preload = 'auto';
-    this.bgm = a;
-    this.bgmReady = true;
-    if (this.settings.music() && !this.backgrounded) this.playBgm();
+  async initBgm(): Promise<void> {
+    if (this.bgmReady || this.bgmLoading) return;
+    this.bgmLoading = true;
+    const ctx = this.ensureCtx();
+    if (!ctx) { this.bgmLoading = false; return; }
+    try {
+      const res = await fetch('assets/audio/bgm.mp3');
+      const arr = await res.arrayBuffer();
+      this.bgmBuffer = await ctx.decodeAudioData(arr);
+      this.bgmReady = true;
+      if (this.settings.music() && !this.backgrounded) this.playBgm();
+    } catch (e) {
+      console.warn('bgm load failed', e);
+    } finally {
+      this.bgmLoading = false;
+    }
   }
 
   private playBgm(): void {
-    if (!this.bgm) return;
-    this.bgm.play().catch(() => {
-      const resume = () => {
-        this.bgm?.play().catch(() => {});
-        window.removeEventListener('pointerdown', resume);
-        window.removeEventListener('keydown', resume);
-      };
-      window.addEventListener('pointerdown', resume, { once: true });
-      window.addEventListener('keydown', resume, { once: true });
-    });
+    const ctx = this.ensureCtx();
+    if (!ctx || !this.bgmBuffer || this.bgmSource) return;
+    const src = ctx.createBufferSource();
+    src.buffer = this.bgmBuffer;
+    src.loop = true;
+    const gain = ctx.createGain();
+    gain.gain.value = 0.20;
+    src.connect(gain).connect(ctx.destination);
+    try { src.start(); } catch { return; }
+    this.bgmSource = src;
+    this.bgmGain = gain;
   }
 
-  private pauseBgm(): void { this.bgm?.pause(); }
+  private pauseBgm(): void {
+    if (!this.bgmSource) return;
+    try { this.bgmSource.stop(); } catch { /* already stopped */ }
+    this.bgmSource.disconnect();
+    this.bgmGain?.disconnect();
+    this.bgmSource = null;
+    this.bgmGain = null;
+  }
 
   private clearMediaSession(): void {
     try {
