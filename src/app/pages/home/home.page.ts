@@ -9,11 +9,12 @@ import { WalletService } from '../../core/services/wallet.service';
 import { AdsService } from '../../core/services/ads.service';
 import { AudioService } from '../../core/services/audio.service';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
+import { MissionsPanelComponent } from './missions-panel.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [IonContent, IonButton, IonIcon, RouterLink, TranslatePipe],
+  imports: [IonContent, IonButton, IonIcon, RouterLink, TranslatePipe, MissionsPanelComponent],
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
 })

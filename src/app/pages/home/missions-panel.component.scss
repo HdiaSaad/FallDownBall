@@ -1,0 +1,18 @@
+.panel { padding: 12px 16px 0; color: #eee; }
+.panel h3 { margin: 0 0 8px; font-size: 14px; font-weight: 600; color: #bbb; text-transform: uppercase; letter-spacing: 1px; }
+.row { display: flex; flex-direction: column; gap: 8px; }
+.card {
+  background: #1a1d26; border-radius: 10px; padding: 10px 12px;
+  display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 10px;
+}
+.card .icon { font-size: 24px; grid-row: 1 / span 2; }
+.card .info { display: flex; flex-direction: column; gap: 4px; }
+.card p { margin: 0; font-size: 13px; line-height: 1.2; }
+.card .progress-bar { height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+.card .progress-bar .fill { height: 100%; background: linear-gradient(90deg, #4fc3f7, #00bcd4); }
+.card small { color: #888; font-size: 11px; }
+.card ion-button { grid-row: 1 / span 2; grid-column: 3; }
+.card.ready { box-shadow: 0 0 10px rgba(255, 213, 79, 0.4); }
+.card.ready ion-button { --background: #ffd54f; --color: #000; animation: pulse 1s infinite; }
+.card.done { opacity: 0.5; }
+@keyframes pulse { 50% { transform: scale(1.05); } }
