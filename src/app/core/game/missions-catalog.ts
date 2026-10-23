@@ -29,6 +29,7 @@ export interface Mission {
   target: number;
   progress: number;
   claimed: boolean;
+  reward: number;
 }
 
 export function todayKey(d: Date = new Date()): string {
@@ -49,5 +50,6 @@ export function rollDailyMissions(templates: MissionTemplate[] = MISSION_TEMPLAT
     target: t.targets[Math.floor(rand() * t.targets.length)],
     progress: 0,
     claimed: false,
+    reward: t.reward,
   }));
 }

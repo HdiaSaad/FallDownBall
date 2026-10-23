@@ -78,6 +78,16 @@ const T: Record<string, Record<Locale, string>> = {
   'achievement.all_skins.desc':       { en: 'Unlock all 7 ball skins',                       fr: 'Débloquer les 7 skins de balle' },
   'achievement.daily_streak_7.name':  { en: 'Faithful',                                      fr: 'Fidèle' },
   'achievement.daily_streak_7.desc':  { en: 'Claim all missions 7 days in a row',            fr: 'Réclamer toutes les missions 7 jours de suite' },
+  'mission.score_single':             { en: 'Score {n} in one run',                          fr: 'Faire {n} points en une partie' },
+  'mission.coins_single':             { en: 'Collect {n} coins in a run',                    fr: 'Ramasser {n} pièces en une partie' },
+  'mission.runs_day':                 { en: 'Play {n} runs today',                           fr: 'Jouer {n} parties aujourd\'hui' },
+  'mission.combos_day':               { en: 'Trigger {n} combos today',                      fr: 'Déclencher {n} combos aujourd\'hui' },
+  'mission.powerups_day':             { en: 'Pick up {n} powerups today',                    fr: 'Ramasser {n} bonus aujourd\'hui' },
+  'mission.survive_single':           { en: 'Survive {n} seconds in a run',                  fr: 'Survivre {n} secondes en une partie' },
+  'mission.claim':                    { en: 'Claim',                                         fr: 'Réclamer' },
+  'mission.claimed':                  { en: 'Claimed',                                       fr: 'Réclamé' },
+  'mission.rewardToast':              { en: '+{reward} coins',                               fr: '+{reward} pièces' },
+  'mission.title':                    { en: 'Daily Missions',                                fr: 'Missions du jour' },
 };
 
 @Injectable({ providedIn: 'root' })

@@ -13,6 +13,7 @@ import { SettingsService } from '../../core/services/settings.service';
 import { AdsService } from '../../core/services/ads.service';
 import { AudioService } from '../../core/services/audio.service';
 import { AchievementService } from '../../core/services/achievement.service';
+import { MissionsService } from '../../core/services/missions.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ACHIEVEMENTS } from '../../core/game/achievement-catalog';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
@@ -36,10 +37,12 @@ export class GamePage implements OnDestroy {
   private audio = inject(AudioService);
   private router = inject(Router);
   private achievements = inject(AchievementService);
+  private missions = inject(MissionsService);
   private i18n = inject(I18nService);
   private toastCtrl = inject(ToastController);
   paused = signal(false);
   private coinsThisRun = 0;
+  private runStartMs = 0;
 
   constructor() { addIcons({ pauseOutline, playOutline, homeOutline, refreshOutline }); }
 
@@ -50,6 +53,7 @@ export class GamePage implements OnDestroy {
     canvas.getContext('2d')!.scale(dpr, dpr);
 
     this.coinsThisRun = 0;
+    this.runStartMs = performance.now();
     this.ads.hideBanner();
     const engine = new GameEngine(canvas, {
       skinId: this.wallet.equippedSkin(),
@@ -65,6 +69,10 @@ export class GamePage implements OnDestroy {
       if (ev.kind === 'coin') {
         this.wallet.addCoins(ev.value);
         this.coinsThisRun += ev.value;
+        this.missions.recordEvent('coin_run', this.coinsThisRun);
+      }
+      if (ev.kind === 'shield' || ev.kind === 'magnet' || ev.kind === 'bonus' || ev.kind === 'speedBrick') {
+        this.missions.recordEvent('powerup');
       }
       if (ev.kind === 'savedByShield') {
         const total = this.achievements.incrementShieldSave();
@@ -72,9 +80,13 @@ export class GamePage implements OnDestroy {
       }
       if (ev.kind === 'combo') {
         this.notifyUnlocks(this.achievements.recordEvent({ comboSteps: ev.steps, wooowFired: ev.wooow }));
+        this.missions.recordEvent('combo');
       }
       if (ev.kind === 'perfectRun')  this.wallet.addCoins(100);
       if (ev.kind === 'gameOver') {
+        const survivedSec = Math.floor((performance.now() - this.runStartMs) / 1000);
+        this.missions.recordEvent('run_end', ev.score);
+        this.missions.recordEvent('survive_run', survivedSec);
         this.notifyUnlocks(this.achievements.recordEvent({
           runEnded: true,
           score: ev.score,
@@ -119,7 +131,7 @@ export class GamePage implements OnDestroy {
     if (this.paused()) { this.engine.resume(); this.paused.set(false); }
     else               { this.engine.pause();  this.paused.set(true); }
   }
-  replay() { this.coinsThisRun = 0; this.engine.reset(); this.paused.set(false); }
+  replay() { this.coinsThisRun = 0; this.runStartMs = performance.now(); this.engine.reset(); this.paused.set(false); }
   home()   { this.router.navigateByUrl('/'); }
 
   private async notifyUnlocks(newly: string[]) {
