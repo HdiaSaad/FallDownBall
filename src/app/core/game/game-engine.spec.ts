@@ -12,7 +12,7 @@ describe('GameEngine', () => {
 
   beforeEach(() => {
     cv = mockCanvas();
-    engine = new GameEngine(cv, { skinId: 0, sound: false });
+    engine = new GameEngine(cv, { skinId: 0, sound: false, height: 640 });
   });
 
   afterEach(() => engine.destroy());

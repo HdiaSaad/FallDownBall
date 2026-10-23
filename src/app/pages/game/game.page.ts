@@ -55,7 +55,12 @@ export class GamePage implements OnDestroy {
   ionViewDidEnter() {
     const canvas = this.cvRef.nativeElement;
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = 360 * dpr; canvas.height = 640 * dpr;
+    const rect = canvas.getBoundingClientRect();
+    const logicalW = 360;
+    const logicalH = rect.width > 0
+      ? Math.round(logicalW * (rect.height / rect.width))
+      : 640;
+    canvas.width = logicalW * dpr; canvas.height = logicalH * dpr;
     canvas.getContext('2d')!.scale(dpr, dpr);
 
     this.coinsThisRun = 0;
@@ -69,6 +74,7 @@ export class GamePage implements OnDestroy {
     const engine = new GameEngine(canvas, {
       skinId: this.wallet.equippedSkin(),
       sound:  this.settings.sound(),
+      height: logicalH,
       onSoundEvent: (name) => {
         this.audio.play(name);
         this.audio.haptic(name);

@@ -2,12 +2,12 @@
 .home-wrap {
   display: flex; flex-direction: column; align-items: center; justify-content: space-between;
   min-height: 100%;
-  padding: calc(env(safe-area-inset-top) + 12px) 24px calc(env(safe-area-inset-bottom) + 12px);
+  padding: calc(env(safe-area-inset-top) + 32px) 24px calc(env(safe-area-inset-bottom) + 16px);
   gap: 20px;
 }
 .logo-ring {
   position: relative;
-  width: min(220px, 42vw); aspect-ratio: 1;
+  width: min(180px, 34vw); aspect-ratio: 1;
   display: flex; align-items: center; justify-content: center;
   animation: logo-float 3s ease-in-out infinite;
   flex-shrink: 0;
@@ -36,5 +36,5 @@
 .stat .label { font-size: 12px; opacity: .6; }
 .stat .value { font-size: 24px; font-weight: 700; }
 .play-btn { width: 100%; max-width: 320px; --background: #ffd54f; --color: #000; font-weight: 700; }
-.icon-row { display: flex; gap: 24px; }
-.icon-row ion-icon { color: #fff; font-size: 32px; }
+.icon-row { display: flex; gap: 20px; }
+.icon-row ion-icon { color: #fff; font-size: 26px; }

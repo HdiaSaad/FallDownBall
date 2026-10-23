@@ -11,6 +11,7 @@ import { getSkin } from './catalog';
 export interface GameEngineOpts {
   skinId: number;
   sound: boolean;
+  height: number;
   onSoundEvent?: (name: 'coin'|'shield'|'magnet'|'bonus'|'death'|'revive'|'combo'|'perfectRun'|'speedBrick') => void;
 }
 
@@ -20,7 +21,7 @@ export type GameEvent =
   | { kind: 'combo'; steps: number; wooow: boolean }
   | { kind: 'gameOver'; score: number; coins: number; newRecord?: boolean };
 
-const W = 360, H = 640;
+const W = 360;
 const G = 0.36, TERMINAL = 8.5, MOVE = 4.2;
 const GAP_W = 72, BOARD_H = 7;
 const COLOR_CYCLE = ['#ffd54f','#4fc3f7','#b388ff','#4fe3c1','#ff2d55','#ffab40','#64ffda','#f06292','#9ccc65','#ff6a00'];
@@ -37,6 +38,7 @@ export class GameEngine {
   readonly events$ = new Subject<GameEvent>();
 
   private ctx: CanvasRenderingContext2D;
+  private readonly H: number;
   private hero: Hero;
   private boards: Board[] = [];
   private props: Prop[] = [];
@@ -64,6 +66,7 @@ export class GameEngine {
 
   constructor(private canvas: HTMLCanvasElement, private opts: GameEngineOpts) {
     this.ctx = canvas.getContext('2d')!;
+    this.H = opts.height;
     this.hero = createHero(W/2, 120, opts.skinId);
     this.spawnStarterBoards();
     this.loop = this.loop.bind(this);
@@ -135,7 +138,7 @@ export class GameEngine {
     const secondGapX = leftSide ? W - GAP_W - 10 : 10;
     this.boards.push({ y: 315, gapX: secondGapX, gapW: GAP_W, label: null, consumed: false });
     // Remaining boards: random as usual.
-    for (let y = 410; y < H + 220; y += 95) this.spawnBoard(y);
+    for (let y = 410; y < this.H + 220; y += 95) this.spawnBoard(y);
   }
 
   private spawnBoard(y: number) {
@@ -209,7 +212,7 @@ export class GameEngine {
       this.score.update(s => s + 1);
     }
     const lastY = this.boards.length ? this.boards[this.boards.length - 1].y : 0;
-    if (lastY < H) this.spawnBoard(lastY + 95);
+    if (lastY < this.H) this.spawnBoard(lastY + 95);
     this.props = this.props.filter(p => p.y > -20);
 
     // input → vx (green brick boosts the BALL for a few seconds)
@@ -273,9 +276,9 @@ export class GameEngine {
       if (this.stepsSinceLanding >= 2) {
         const n = this.stepsSinceLanding;
         const isCombo = this.comboTimer > 0;
-        this.spawnFloatText(`+${n}`, W/2, H/2, 56, '#ffd54f');
+        this.spawnFloatText(`+${n}`, W/2, this.H/2, 56, '#ffd54f');
         if (isCombo) {
-          this.spawnFloatText('Wooow!', W/2, H/2 - 70, 44, '#ff3058');
+          this.spawnFloatText('Wooow!', W/2, this.H/2 - 70, 44, '#ff3058');
         }
         this.comboTimer = 150;
         // combo multi + event
@@ -287,7 +290,7 @@ export class GameEngine {
         if (isCombo) {
           this.wooowCount++;
           if (this.wooowCount === 3) {
-            this.spawnFloatText('PERFECT!', W/2, H/2 - 140, 72, '#ff2d55');
+            this.spawnFloatText('PERFECT!', W/2, this.H/2 - 140, 72, '#ff2d55');
             this.events$.next({ kind: 'perfectRun' });
             this.opts.onSoundEvent?.('perfectRun');
           }
@@ -335,7 +338,7 @@ export class GameEngine {
     }
 
     // outran the scroll — bonus: +N per second while off-bottom, hero rides the edge
-    const edgeY = H + this.hero.r;
+    const edgeY = this.H + this.hero.r;
     if (this.hero.y > edgeY) {
       this.hero.y = edgeY;
       if (this.hero.vy > 0) this.hero.vy = 0;
@@ -344,7 +347,7 @@ export class GameEngine {
       while (this.belowAwarded < awardable) {
         this.belowAwarded++;
         this.score.update(s => s + this.belowAwarded);
-        this.spawnFloatText(`+${this.belowAwarded}`, W/2, H/2 - 20);
+        this.spawnFloatText(`+${this.belowAwarded}`, W/2, this.H/2 - 20);
         this.opts.onSoundEvent?.('bonus');
       }
     } else {
@@ -361,9 +364,9 @@ export class GameEngine {
 
   private render() {
     const ctx = this.ctx;
-    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    const bg = ctx.createLinearGradient(0, 0, 0, this.H);
     bg.addColorStop(0, '#0a0f1c'); bg.addColorStop(1, '#1a1030');
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, this.H);
 
     // laser — body + jagged teeth on bottom edge
     const g = ctx.createLinearGradient(0, this.laserY, 0, this.laserY + 18);
