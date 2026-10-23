@@ -13,20 +13,25 @@ import { IonToggle } from '@ionic/angular/ion-toggle';
 import { IonRadioGroup } from '@ionic/angular/ion-radio-group';
 import { IonRadio } from '@ionic/angular/ion-radio';
 import { SettingsService } from '../../core/services/settings.service';
+import { I18nService, Locale } from '../../core/services/i18n.service';
+import { TranslatePipe } from '../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
   imports: [FormsModule, IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton,
-            IonButtons, IonList, IonItem, IonLabel, IonToggle, IonRadioGroup, IonRadio],
+            IonButtons, IonList, IonItem, IonLabel, IonToggle, IonRadioGroup, IonRadio, TranslatePipe],
   templateUrl: './settings.page.html',
   styleUrls: ['./settings.page.scss'],
 })
 export class SettingsPage {
   settings = inject(SettingsService);
+  i18n = inject(I18nService);
 
   async update<K extends 'sound'|'music'|'vibration'|'controlMode'>(key: K, value: any) {
     (this.settings[key] as any).set(value);
     await this.settings.save();
   }
+
+  async setLocale(l: Locale) { await this.i18n.setLocale(l); }
 }

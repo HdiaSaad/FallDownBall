@@ -6,6 +6,7 @@ import {
 import {
   applyGravity, clampX, collideBoard, collideProp, applyMagnet
 } from './physics';
+import { getSkin } from './catalog';
 
 export interface GameEngineOpts {
   skinId: number;
@@ -20,8 +21,10 @@ export type GameEvent =
 const W = 360, H = 640;
 const G = 0.36, TERMINAL = 8.5, MOVE = 4.2;
 const GAP_W = 72, BOARD_H = 7;
-const SKINS = ['#ff5f6d','#ff6e6e','#4fe3c1','#b388ff','#ffa94d'];
 const COLOR_CYCLE = ['#ffd54f','#4fc3f7','#b388ff','#4fe3c1','#ff2d55','#ffab40','#64ffda','#f06292','#9ccc65','#ff6a00'];
+const BOARD_COLORS = ['#4fc3f7','#64ffda','#b388ff','#ffd54f','#ff6a00','#ff2d55','#9ccc65','#f06292','#4fe3c1','#ffab40'];
+const SPEED_BOOST_FRAMES = 240;
+const SPEED_BOOST_MULT = 1.8;
 
 export class GameEngine {
   readonly score = signal(0);
@@ -43,7 +46,11 @@ export class GameEngine {
   private tiltVx = 0;
   private belowFrames = 0;
   private belowAwarded = 0;
-  private floatTexts: Array<{x:number;y:number;vy:number;life:number;max:number;text:string;color:string}> = [];
+  private floatTexts: Array<{x:number;y:number;vy:number;life:number;max:number;text:string;color:string;size:number}> = [];
+  private wasInAir = true;
+  private stepsSinceLanding = 0;
+  private comboTimer = 0;
+  private speedBoost = 0;
 
   constructor(private canvas: HTMLCanvasElement, private opts: GameEngineOpts) {
     this.ctx = canvas.getContext('2d')!;
@@ -63,6 +70,8 @@ export class GameEngine {
     this.saveUsed = false;
     this.belowFrames = 0; this.belowAwarded = 0;
     this.floatTexts = [];
+    this.wasInAir = true; this.stepsSinceLanding = 0; this.comboTimer = 0;
+    this.speedBoost = 0;
     this.score.set(0); this.coins.set(0); this.state.set('playing');
     for (let y = 220; y < H + 220; y += 95) this.spawnBoard(y);
   }
@@ -98,9 +107,11 @@ export class GameEngine {
 
   private spawnBoard(y: number) {
     const gapX = Math.random() * (W - GAP_W);
-    const label: Board['label'] = Math.random() < 1/7
-      ? (Math.random() < 0.5 ? '×2' : '+5')
-      : null;
+    let label: Board['label'] = null;
+    if (Math.random() < 1/5) {
+      const t = Math.random();
+      label = t < 1/3 ? '×2' : t < 2/3 ? '+5' : 'speed';
+    }
     this.boards.push({ y, gapX, gapW: GAP_W, label, consumed: false });
     if (Math.random() < 1/6) {
       const kinds: Array<'coin'|'shield'|'magnet'> = ['coin','shield','magnet','coin','coin'];
@@ -112,9 +123,9 @@ export class GameEngine {
     }
   }
 
-  private spawnFloatText(text: string, x: number, y: number) {
+  private spawnFloatText(text: string, x: number, y: number, size = 42, color = '#ffd54f') {
     const life = 90;
-    this.floatTexts.push({ x, y, vy: -1.4, life, max: life, text, color: '#ffd54f' });
+    this.floatTexts.push({ x, y, vy: -1.4, life, max: life, text, color, size });
   }
 
   private burst(x: number, y: number, color: string, n = 10) {
@@ -144,7 +155,11 @@ export class GameEngine {
     // scroll
     for (const b of this.boards) b.y -= this.scrollSpeed;
     for (const p of this.props)  p.y -= this.scrollSpeed;
-    this.laserY += 0.09;
+    // laser rhythm: move for ~2s, pause for ~0.9s — repeat
+    const cycle = this.tFrame % 180;
+    if (cycle < 120) this.laserY += 0.11;
+    const boosted = this.speedBoost > 0;
+    if (boosted) this.speedBoost--;
 
     // recycle
     while (this.boards.length && this.boards[0].y < -20) {
@@ -155,38 +170,75 @@ export class GameEngine {
     if (lastY < H) this.spawnBoard(lastY + 95);
     this.props = this.props.filter(p => p.y > -20);
 
-    // input → vx
+    // input → vx (green brick boosts the BALL for a few seconds)
+    const move = boosted ? MOVE * SPEED_BOOST_MULT : MOVE;
+    const terminal = boosted ? TERMINAL * SPEED_BOOST_MULT : TERMINAL;
     let vx = 0;
-    if (this.keys.l) vx -= MOVE;
-    if (this.keys.r) vx += MOVE;
-    if (vx === 0 && this.tiltVx !== 0) vx = this.tiltVx;
+    if (this.keys.l) vx -= move;
+    if (this.keys.r) vx += move;
+    if (vx === 0 && this.tiltVx !== 0) vx = this.tiltVx * (boosted ? SPEED_BOOST_MULT : 1);
     this.hero.vx = vx !== 0 ? vx : this.hero.vx * 0.82;
     this.hero.x += this.hero.vx;
     clampX(this.hero, W);
 
     // gravity
-    applyGravity(this.hero, G, TERMINAL);
+    applyGravity(this.hero, G, terminal);
     this.hero.y += this.hero.vy;
 
     // trail
     this.hero.trail.push({ x: this.hero.x, y: this.hero.y });
     if (this.hero.trail.length > 14) this.hero.trail.shift();
 
+    // boards that moved above the hero while in air count as "fallen past"
+    for (const b of this.boards) {
+      if (!b.passedHero && b.y + BOARD_H < this.hero.y - this.hero.r) {
+        b.passedHero = true;
+        if (this.wasInAir) this.stepsSinceLanding++;
+      }
+    }
+
     // collisions boards
+    let anyCollision = false;
     for (const b of this.boards) {
       if (collideBoard(this.hero, b)) {
+        anyCollision = true;
         this.hero.y = b.y - this.hero.r;
         this.hero.vy = 0;
         if (b.label && !b.consumed) {
           b.consumed = true;
-          if (b.label === '×2') this.score.update(s => s * 2);
-          else                  this.score.update(s => s + 5);
-          this.burst(this.hero.x, b.y, '#ffd54f', 14);
+          if (b.label === '×2') {
+            this.score.update(s => s * 2);
+            this.burst(this.hero.x, b.y, '#ffd54f', 14);
+          } else if (b.label === '+5') {
+            this.score.update(s => s + 5);
+            this.burst(this.hero.x, b.y, '#ffd54f', 14);
+          } else {
+            this.speedBoost = SPEED_BOOST_FRAMES;
+            this.burst(this.hero.x, b.y, '#76ff03', 18);
+          }
           this.events$.next({ kind: 'bonus' });
           this.opts.onSoundEvent?.('bonus');
         }
       }
     }
+
+    // landing transition — show combo text if we fell past multiple boards
+    if (this.wasInAir && anyCollision) {
+      if (this.stepsSinceLanding >= 2) {
+        const n = this.stepsSinceLanding;
+        const isCombo = this.comboTimer > 0;
+        this.spawnFloatText(`+${n}`, W/2, H/2, 56, '#ffd54f');
+        if (isCombo) {
+          this.spawnFloatText('Wooow!', W/2, H/2 - 70, 44, '#ff3058');
+        }
+        this.comboTimer = 150;
+        this.events$.next({ kind: 'bonus' });
+        this.opts.onSoundEvent?.('bonus');
+      }
+      this.stepsSinceLanding = 0;
+    }
+    this.wasInAir = !anyCollision;
+    if (this.comboTimer > 0) this.comboTimer--;
 
     // collisions props
     for (const p of this.props) {
@@ -210,12 +262,12 @@ export class GameEngine {
     for (const q of this.particles) { q.x += q.vx; q.y += q.vy; q.life--; }
     this.particles = this.particles.filter(q => q.life > 0);
 
-    // laser
-    if (this.hero.y - this.hero.r < this.laserY + 18) {
+    // laser (teeth reach to laserY + 22)
+    if (this.hero.y - this.hero.r < this.laserY + 22) {
       if (this.hero.shield > 0) {
         this.hero.shield = 0;
         this.hero.vy = 2;
-        this.hero.y  = this.laserY + 20 + this.hero.r + 2;
+        this.hero.y  = this.laserY + 24 + this.hero.r + 2;
         this.burst(this.hero.x, this.hero.y, '#4fe3c1', 20);
         this.events$.next({ kind: 'savedByShield' });
       } else {
@@ -254,23 +306,51 @@ export class GameEngine {
     bg.addColorStop(0, '#0a0f1c'); bg.addColorStop(1, '#1a1030');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
-    // laser
+    // laser — body + jagged teeth on bottom edge
+    const laserPaused = this.tFrame % 180 >= 120;
     const g = ctx.createLinearGradient(0, this.laserY, 0, this.laserY + 18);
     g.addColorStop(0, '#ff3058'); g.addColorStop(1, '#550011');
-    ctx.fillStyle = g; ctx.fillRect(0, this.laserY, W, 18);
+    ctx.fillStyle = g; ctx.fillRect(0, this.laserY, W, 14);
+    // teeth
+    ctx.fillStyle = '#ff3058';
+    const toothW = 10, toothH = 8;
+    ctx.beginPath();
+    for (let x = 0; x < W; x += toothW) {
+      ctx.moveTo(x, this.laserY + 14);
+      ctx.lineTo(x + toothW / 2, this.laserY + 14 + toothH);
+      ctx.lineTo(x + toothW, this.laserY + 14);
+    }
+    ctx.closePath(); ctx.fill();
+    // dark edge under the teeth
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x < W; x += toothW) {
+      ctx.moveTo(x, this.laserY + 14);
+      ctx.lineTo(x + toothW / 2, this.laserY + 14 + toothH);
+      ctx.lineTo(x + toothW, this.laserY + 14);
+    }
+    ctx.stroke();
+    // pulsing glow when paused — tells the player "it's about to move again"
+    if (laserPaused) {
+      const pulse = 0.3 + 0.3 * Math.sin(this.tFrame * 0.3);
+      ctx.fillStyle = `rgba(255,80,100,${pulse})`;
+      ctx.fillRect(0, this.laserY + 14 + toothH, W, 2);
+    }
 
     // boards
-    ctx.fillStyle = '#4fc3f7';
+    const boardColor = BOARD_COLORS[Math.floor(this.score() / 100) % BOARD_COLORS.length];
+    ctx.fillStyle = boardColor;
     for (const b of this.boards) {
       ctx.fillRect(0, b.y, b.gapX, BOARD_H);
       ctx.fillRect(b.gapX + b.gapW, b.y, W - (b.gapX + b.gapW), BOARD_H);
       if (b.label && !b.consumed) {
         const cx = (b.gapX > W/2) ? b.gapX/2 : b.gapX + b.gapW + (W - b.gapX - b.gapW)/2;
-        ctx.fillStyle = '#ffd54f';
+        const isSpeed = b.label === 'speed';
+        ctx.fillStyle = isSpeed ? '#76ff03' : '#ffd54f';
         ctx.fillRect(cx - 14, b.y - 14, 28, 14);
         ctx.fillStyle = '#000'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText(b.label, cx, b.y - 3);
-        ctx.fillStyle = '#4fc3f7';
+        ctx.fillText(isSpeed ? '»»' : b.label, cx, b.y - 3);
+        ctx.fillStyle = boardColor;
       }
     }
 
@@ -317,10 +397,39 @@ export class GameEngine {
       }
     }
     // ball — radial-gradient sphere with highlight, outline, inner shadow
+    const skin = getSkin(h.skinId);
     const s = this.score();
-    const base = s < 100
-      ? SKINS[h.skinId % SKINS.length]
-      : COLOR_CYCLE[(Math.floor(s / 100) - 1) % COLOR_CYCLE.length];
+    let base: string;
+    if (skin.effect === 'rainbow') {
+      const hue = (this.tFrame * 2) % 360;
+      base = `hsl(${hue}, 95%, 55%)`;
+    } else if (skin.effect === 'fire') {
+      base = skin.color;
+    } else {
+      base = s < 100
+        ? skin.color
+        : COLOR_CYCLE[(Math.floor(s / 100) - 1) % COLOR_CYCLE.length];
+    }
+    if (skin.effect === 'fire') {
+      // flame aura behind ball
+      for (let i = 0; i < 4; i++) {
+        const r = h.r + 3 + i * 2 + Math.sin(this.tFrame * 0.4 + i) * 1.5;
+        const a = 0.35 - i * 0.08;
+        ctx.fillStyle = i % 2 === 0 ? `rgba(255,110,30,${a})` : `rgba(255,210,60,${a})`;
+        ctx.beginPath(); ctx.arc(h.x, h.y + i * 0.6, r, 0, Math.PI * 2); ctx.fill();
+      }
+      // spark particles
+      if (this.tFrame % 2 === 0) {
+        this.particles.push({
+          x: h.x + (Math.random() - 0.5) * h.r * 1.2,
+          y: h.y + h.r * 0.3 + Math.random() * 3,
+          vx: (Math.random() - 0.5) * 1.2,
+          vy: 1.2 + Math.random() * 1.4,
+          life: 18,
+          color: Math.random() < 0.5 ? '#ff6a00' : '#ffd54f',
+        });
+      }
+    }
     const grad = ctx.createRadialGradient(h.x - h.r*0.35, h.y - h.r*0.4, h.r*0.15, h.x, h.y, h.r);
     grad.addColorStop(0, '#ffffff');
     grad.addColorStop(0.35, base);
@@ -349,7 +458,7 @@ export class GameEngine {
       ctx.globalAlpha = t.life > 30 ? 1 : t.life / 30;
       ctx.translate(t.x, t.y);
       ctx.scale(scale, scale);
-      ctx.font = 'bold 42px sans-serif';
+      ctx.font = `bold ${t.size}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.lineWidth = 6;

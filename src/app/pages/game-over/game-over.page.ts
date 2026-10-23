@@ -7,11 +7,12 @@ import { addIcons } from 'ionicons';
 import { refreshOutline, homeOutline, videocamOutline } from 'ionicons/icons';
 import { WalletService } from '../../core/services/wallet.service';
 import { AdsService } from '../../core/services/ads.service';
+import { TranslatePipe } from '../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-game-over',
   standalone: true,
-  imports: [IonContent, IonButton, IonIcon],
+  imports: [IonContent, IonButton, IonIcon, TranslatePipe],
   templateUrl: './game-over.page.html',
   styleUrls: ['./game-over.page.scss'],
 })

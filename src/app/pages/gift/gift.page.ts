@@ -12,13 +12,15 @@ import { videocamOutline, giftOutline } from 'ionicons/icons';
 import { GiftService, PRIZE_TABLE } from '../../core/services/gift.service';
 import { WalletService } from '../../core/services/wallet.service';
 import { AudioService } from '../../core/services/audio.service';
+import { I18nService } from '../../core/services/i18n.service';
+import { TranslatePipe } from '../../core/pipes/translate.pipe';
 
 interface Confetto { x: number; y: number; vx: number; vy: number; life: number; color: string; }
 
 @Component({
   selector: 'app-gift',
   standalone: true,
-  imports: [IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons, IonButton, IonIcon],
+  imports: [IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons, IonButton, IonIcon, TranslatePipe],
   templateUrl: './gift.page.html',
   styleUrls: ['./gift.page.scss'],
 })
@@ -27,6 +29,7 @@ export class GiftPage implements OnInit, OnDestroy {
   gift = inject(GiftService);
   wallet = inject(WalletService);
   private audio = inject(AudioService);
+  private i18n = inject(I18nService);
   prizes = PRIZE_TABLE;
   rotation = 0;
   spinning = signal(false);
@@ -51,7 +54,7 @@ export class GiftPage implements OnInit, OnDestroy {
 
   private updateCountdown() {
     const ms = this.gift.msUntilNextClaim();
-    if (ms <= 0) { this.countdown.set('Available!'); return; }
+    if (ms <= 0) { this.countdown.set(this.i18n.t('gift.available')); return; }
     const h = Math.floor(ms / 3_600_000);
     const m = Math.floor((ms % 3_600_000) / 60_000);
     const s = Math.floor((ms % 60_000) / 1_000);

@@ -5,16 +5,16 @@
     </div>
     <div class="stats">
       <div class="stat">
-        <span class="label">Coins</span>
+        <span class="label">{{ 'common.coins' | translate }}</span>
         <span class="value">{{ wallet.coins() }}</span>
       </div>
       <div class="stat">
-        <span class="label">Best</span>
+        <span class="label">{{ 'common.best' | translate }}</span>
         <span class="value">{{ wallet.best() }}</span>
       </div>
     </div>
     <ion-button expand="block" size="large" class="play-btn" (click)="play()">
-      <ion-icon slot="start" name="play-outline"></ion-icon> Play
+      <ion-icon slot="start" name="play-outline"></ion-icon> {{ 'home.play' | translate }}
     </ion-button>
     <div class="icon-row">
       <ion-button fill="clear" shape="round" routerLink="/settings"><ion-icon name="settings-outline"></ion-icon></ion-button>

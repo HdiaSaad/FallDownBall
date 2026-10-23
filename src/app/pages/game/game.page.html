@@ -1,7 +1,7 @@
 <ion-content [fullscreen]="true" class="game-content">
   <div class="hud">
-    <span>Score <b>{{ score() }}</b></span>
-    <span>Coins <b>{{ coins() }}</b></span>
+    <span>{{ 'common.score' | translate }} <b>{{ score() }}</b></span>
+    <span>{{ 'common.coins' | translate }} <b>{{ coins() }}</b></span>
     <ion-button fill="clear" (click)="togglePause()">
       <ion-icon slot="icon-only" [name]="paused() ? 'play-outline' : 'pause-outline'"></ion-icon>
     </ion-button>
@@ -9,10 +9,10 @@
   <canvas #cv class="game-canvas"></canvas>
   @if (paused()) {
     <div class="pause-overlay">
-      <h2>PAUSE</h2>
-      <ion-button (click)="togglePause()"><ion-icon slot="start" name="play-outline"></ion-icon>Resume</ion-button>
-      <ion-button (click)="replay()"><ion-icon slot="start" name="refresh-outline"></ion-icon>Replay</ion-button>
-      <ion-button fill="outline" (click)="home()"><ion-icon slot="start" name="home-outline"></ion-icon>Home</ion-button>
+      <h2>{{ 'game.pause' | translate }}</h2>
+      <ion-button (click)="togglePause()"><ion-icon slot="start" name="play-outline"></ion-icon>{{ 'game.resume' | translate }}</ion-button>
+      <ion-button (click)="replay()"><ion-icon slot="start" name="refresh-outline"></ion-icon>{{ 'common.replay' | translate }}</ion-button>
+      <ion-button fill="outline" (click)="home()"><ion-icon slot="start" name="home-outline"></ion-icon>{{ 'common.home' | translate }}</ion-button>
     </div>
   }
 </ion-content>

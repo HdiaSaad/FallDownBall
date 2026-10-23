@@ -11,11 +11,12 @@ import { WalletService } from '../../core/services/wallet.service';
 import { SettingsService } from '../../core/services/settings.service';
 import { AdsService } from '../../core/services/ads.service';
 import { AudioService } from '../../core/services/audio.service';
+import { TranslatePipe } from '../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-game',
   standalone: true,
-  imports: [IonContent, IonButton, IonIcon],
+  imports: [IonContent, IonButton, IonIcon, TranslatePipe],
   templateUrl: './game.page.html',
   styleUrls: ['./game.page.scss'],
 })

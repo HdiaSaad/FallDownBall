@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, effect, inject } from '@angular/core';
 import { SettingsService } from './settings.service';
 
 export type SoundName =
@@ -9,6 +9,42 @@ export type SoundName =
 export class AudioService {
   private settings = inject(SettingsService);
   private ctx?: AudioContext;
+  private bgm?: HTMLAudioElement;
+  private bgmReady = false;
+
+  constructor() {
+    effect(() => {
+      const wantMusic = this.settings.music();
+      if (!this.bgmReady) return;
+      if (wantMusic) this.playBgm(); else this.pauseBgm();
+    });
+  }
+
+  initBgm(): void {
+    if (this.bgm) return;
+    const a = new Audio('assets/audio/bgm.mp3');
+    a.loop = true;
+    a.volume = 0.20;
+    a.preload = 'auto';
+    this.bgm = a;
+    this.bgmReady = true;
+    if (this.settings.music()) this.playBgm();
+  }
+
+  private playBgm(): void {
+    if (!this.bgm) return;
+    this.bgm.play().catch(() => {
+      const resume = () => {
+        this.bgm?.play().catch(() => {});
+        window.removeEventListener('pointerdown', resume);
+        window.removeEventListener('keydown', resume);
+      };
+      window.addEventListener('pointerdown', resume, { once: true });
+      window.addEventListener('keydown', resume, { once: true });
+    });
+  }
+
+  private pauseBgm(): void { this.bgm?.pause(); }
 
   private ensureCtx(): AudioContext | undefined {
     if (!this.ctx) {

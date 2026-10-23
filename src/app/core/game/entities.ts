@@ -15,8 +15,9 @@ export interface Board {
   y: number;
   gapX: number;
   gapW: number;
-  label: '×2' | '+5' | null;
+  label: '×2' | '+5' | 'speed' | null;
   consumed: boolean;
+  passedHero?: boolean;
 }
 
 export interface Prop {

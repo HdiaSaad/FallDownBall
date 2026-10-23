@@ -1,19 +1,19 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start"><ion-back-button defaultHref="/"></ion-back-button></ion-buttons>
-    <ion-title>Daily Gift</ion-title>
+    <ion-title>{{ 'gift.title' | translate }}</ion-title>
   </ion-toolbar>
 </ion-header>
 <ion-content [fullscreen]="true">
   <div class="gift-wrap">
     <canvas #wheel width="280" height="280" class="wheel"></canvas>
-    <p class="countdown">Next spin in : <b>{{ countdown() }}</b></p>
-    @if (lastWon() !== null) { <p class="won" [class.celebrating]="celebrating()">You won {{ lastWon() }} coins! ✨</p> }
+    <p class="countdown">{{ 'gift.nextSpin' | translate }} : <b>{{ countdown() }}</b></p>
+    @if (lastWon() !== null) { <p class="won" [class.celebrating]="celebrating()">{{ 'gift.youWon' | translate: { n: lastWon() ?? 0 } }}</p> }
     <ion-button expand="block" (click)="spin()" [disabled]="!gift.canClaim() || spinning()">
-      <ion-icon slot="start" name="gift-outline"></ion-icon> Daily spin
+      <ion-icon slot="start" name="gift-outline"></ion-icon> {{ 'gift.dailySpin' | translate }}
     </ion-button>
     <ion-button expand="block" fill="outline" (click)="freeGift()" [disabled]="spinning()">
-      <ion-icon slot="start" name="videocam-outline"></ion-icon> Watch Ad for extra spin
+      <ion-icon slot="start" name="videocam-outline"></ion-icon> {{ 'gift.watchAd' | translate }}
     </ion-button>
   </div>
 </ion-content>

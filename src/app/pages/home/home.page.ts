@@ -7,22 +7,25 @@ import { addIcons } from 'ionicons';
 import { settingsOutline, giftOutline, shirtOutline, trophyOutline, playOutline } from 'ionicons/icons';
 import { WalletService } from '../../core/services/wallet.service';
 import { AdsService } from '../../core/services/ads.service';
+import { AudioService } from '../../core/services/audio.service';
+import { TranslatePipe } from '../../core/pipes/translate.pipe';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [IonContent, IonButton, IonIcon, RouterLink],
+  imports: [IonContent, IonButton, IonIcon, RouterLink, TranslatePipe],
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
 })
 export class HomePage implements OnInit, OnDestroy {
   wallet = inject(WalletService);
   private ads = inject(AdsService);
+  private audio = inject(AudioService);
   private router = inject(Router);
   constructor() {
     addIcons({ settingsOutline, giftOutline, shirtOutline, trophyOutline, playOutline });
   }
-  ngOnInit() { this.ads.showBanner(); }
+  ngOnInit() { this.ads.showBanner(); this.audio.initBgm(); }
   ngOnDestroy() { this.ads.hideBanner(); }
   play() { this.router.navigateByUrl('/game'); }
 }

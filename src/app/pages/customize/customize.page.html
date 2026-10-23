@@ -1,24 +1,30 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start"><ion-back-button defaultHref="/"></ion-back-button></ion-buttons>
-    <ion-title>Shop ({{ wallet.coins() }} coins)</ion-title>
+    <ion-title>{{ 'shop.title' | translate }} ({{ wallet.coins() }} {{ 'common.coins' | translate }})</ion-title>
   </ion-toolbar>
 </ion-header>
 <ion-content [fullscreen]="true">
   <ion-segment [value]="tab" (ionChange)="tab = $any($event.detail.value)">
-    <ion-segment-button value="skin"><ion-label>Balls</ion-label></ion-segment-button>
-    <ion-segment-button value="bg"><ion-label>Backgrounds</ion-label></ion-segment-button>
+    <ion-segment-button value="skin"><ion-label>{{ 'shop.balls' | translate }}</ion-label></ion-segment-button>
+    <ion-segment-button value="bg"><ion-label>{{ 'shop.backgrounds' | translate }}</ion-label></ion-segment-button>
   </ion-segment>
 
   @if (tab === 'skin') {
     <div class="grid">
       @for (s of skins; track s.id) {
-        <button class="tile" (click)="tapSkin(s)">
-          <div class="ball" [style.background]="s.color"></div>
+        <button class="tile" [class.locked]="!wallet.unlockedSkins().has(s.id) && scoreLocked(s.requiredScore)" (click)="tapSkin(s)">
+          <div class="ball" [class.fire]="s.effect === 'fire'" [class.rainbow]="s.effect === 'rainbow'" [style.background]="s.effect === 'rainbow' ? null : s.color">
+            @if (s.effect === 'fire') { <ion-icon name="flame-outline"></ion-icon> }
+            @if (s.effect === 'rainbow') { <ion-icon name="color-palette-outline"></ion-icon> }
+          </div>
+          <strong>{{ s.nameKey | translate }}</strong>
           @if (wallet.unlockedSkins().has(s.id)) {
             @if (wallet.equippedSkin() === s.id) {
-              <span class="eq"><ion-icon name="checkmark-circle"></ion-icon> Equipped</span>
-            } @else { <span class="eq">Equip</span> }
+              <span class="eq"><ion-icon name="checkmark-circle"></ion-icon> {{ 'shop.equipped' | translate }}</span>
+            } @else { <span class="eq">{{ 'shop.equip' | translate }}</span> }
+          } @else if (scoreLocked(s.requiredScore)) {
+            <span class="req"><ion-icon name="trophy-outline"></ion-icon> {{ 'shop.needScore' | translate: { n: s.requiredScore } }}</span>
           } @else {
             <span class="price"><ion-icon name="lock-closed-outline"></ion-icon> {{ s.price }}</span>
           }
@@ -28,13 +34,15 @@
   } @else {
     <div class="grid">
       @for (b of bgs; track b.id) {
-        <button class="tile" (click)="tapBg(b)">
+        <button class="tile" [class.locked]="!wallet.unlockedBgs().has(b.id) && scoreLocked(b.requiredScore)" (click)="tapBg(b)">
           <div class="bg" [style.background]="b.gradient"></div>
-          <strong>{{ b.name }}</strong>
+          <strong>{{ b.nameKey | translate }}</strong>
           @if (wallet.unlockedBgs().has(b.id)) {
             @if (wallet.equippedBg() === b.id) {
-              <span class="eq"><ion-icon name="checkmark-circle"></ion-icon> Equipped</span>
-            } @else { <span class="eq">Equip</span> }
+              <span class="eq"><ion-icon name="checkmark-circle"></ion-icon> {{ 'shop.equipped' | translate }}</span>
+            } @else { <span class="eq">{{ 'shop.equip' | translate }}</span> }
+          } @else if (scoreLocked(b.requiredScore)) {
+            <span class="req"><ion-icon name="trophy-outline"></ion-icon> {{ 'shop.needScore' | translate: { n: b.requiredScore } }}</span>
           } @else {
             <span class="price"><ion-icon name="lock-closed-outline"></ion-icon> {{ b.price }}</span>
           }
