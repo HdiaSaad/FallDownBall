@@ -50,7 +50,10 @@ export class MissionsPanelComponent {
     if (!this.missions.claim(m.id)) return;
     const t = await this.toastCtrl.create({
       message: this.i18n.t('mission.rewardToast', { reward: 40 }),
-      duration: 1500, color: 'success', position: 'top',
+      duration: 2000,
+      position: 'top',
+      cssClass: 'mission-reward-toast',
+      icon: 'gift-outline',
     });
     await t.present();
   }

@@ -1,5 +1,6 @@
 import { Injectable, effect, inject } from '@angular/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { App } from '@capacitor/app';
 import { SettingsService } from './settings.service';
 
 export type SoundName =
@@ -14,11 +15,32 @@ export class AudioService {
   private bgm?: HTMLAudioElement;
   private bgmReady = false;
 
+  private backgrounded = false;
+
   constructor() {
     effect(() => {
       const wantMusic = this.settings.music();
       if (!this.bgmReady) return;
-      if (wantMusic) this.playBgm(); else this.pauseBgm();
+      if (wantMusic && !this.backgrounded) this.playBgm(); else this.pauseBgm();
+    });
+    App.addListener('appStateChange', ({ isActive }) => {
+      this.backgrounded = !isActive;
+      if (!isActive) {
+        this.pauseBgm();
+        this.clearMediaSession();
+      } else if (this.settings.music() && this.bgmReady) {
+        this.playBgm();
+      }
+    }).catch(() => {});
+    document.addEventListener('visibilitychange', () => {
+      const hidden = document.visibilityState === 'hidden';
+      this.backgrounded = hidden;
+      if (hidden) {
+        this.pauseBgm();
+        this.clearMediaSession();
+      } else if (this.settings.music() && this.bgmReady) {
+        this.playBgm();
+      }
     });
   }
 
@@ -30,7 +52,7 @@ export class AudioService {
     a.preload = 'auto';
     this.bgm = a;
     this.bgmReady = true;
-    if (this.settings.music()) this.playBgm();
+    if (this.settings.music() && !this.backgrounded) this.playBgm();
   }
 
   private playBgm(): void {
@@ -47,6 +69,15 @@ export class AudioService {
   }
 
   private pauseBgm(): void { this.bgm?.pause(); }
+
+  private clearMediaSession(): void {
+    try {
+      if ('mediaSession' in navigator) {
+        (navigator as any).mediaSession.playbackState = 'none';
+        (navigator as any).mediaSession.metadata = null;
+      }
+    } catch { /* ignore */ }
+  }
 
   private ensureCtx(): AudioContext | undefined {
     if (!this.ctx) {

@@ -81,3 +81,26 @@ ion-toast.achievement-toast::part(icon) {
 ion-toast.achievement-toast::part(message) {
   color: #fff8dc;
 }
+
+ion-toast.mission-reward-toast {
+  --background: linear-gradient(135deg, #002a1b 0%, #004a2e 50%, #002a1b 100%);
+  --color: #4fe3c1;
+  --border-radius: 14px;
+  --border-color: #4fe3c1;
+  --border-style: solid;
+  --border-width: 1.5px;
+  --box-shadow: 0 8px 24px rgba(79, 227, 193, 0.35), 0 0 0 1px rgba(79, 227, 193, 0.3);
+  --min-height: 56px;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.2px;
+}
+ion-toast.mission-reward-toast::part(icon) {
+  color: #4fe3c1;
+  font-size: 22px;
+  margin-inline-end: 10px;
+  filter: drop-shadow(0 0 6px rgba(79, 227, 193, 0.6));
+}
+ion-toast.mission-reward-toast::part(message) {
+  color: #e0fff6;
+}

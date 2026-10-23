@@ -52,8 +52,6 @@ export class GameEngine {
   private rafId = 0;
   private keys = { l: false, r: false };
   private tiltVx = 0;
-  private belowFrames = 0;
-  private belowAwarded = 0;
   private floatTexts: Array<{x:number;y:number;vy:number;life:number;max:number;text:string;color:string;size:number}> = [];
   private wasInAir = true;
   private stepsSinceLanding = 0;
@@ -84,7 +82,6 @@ export class GameEngine {
     this.boards = []; this.props = []; this.particles = [];
     this.laserY = -30; this.scrollSpeed = 1.1; this.tFrame = 0;
     this.saveUsed = false;
-    this.belowFrames = 0; this.belowAwarded = 0;
     this.floatTexts = [];
     this.wasInAir = true; this.stepsSinceLanding = 0; this.comboTimer = 0;
     this.speedBoost = 0;
@@ -199,10 +196,22 @@ export class GameEngine {
       this.comboMultiFraction.set(this.comboMultiTimer / COMBO_WINDOW_FRAMES);
       if (this.comboMultiTimer === 0) this.comboMulti.set(1);
     }
-    // scroll
+    // scroll — camera follows the ball when it enters the bottom "follow zone"
     const scrollMul = this.tutorialMode ? 0.5 : 1;
-    for (const b of this.boards) b.y -= this.scrollSpeed * scrollMul;
-    for (const p of this.props)  p.y -= this.scrollSpeed * scrollMul;
+    const followStart = this.H * 0.75;
+    let catchUp = 0;
+    if (this.hero.y > followStart) {
+      const t = Math.min(1, (this.hero.y - followStart) / (this.H - followStart));
+      // match the ball's fall speed inside the follow zone...
+      catchUp = Math.max(0, this.hero.vy) * t;
+      // ...and add a recovery pull if the ball already dropped below the viewport
+      if (this.hero.y > this.H) catchUp += (this.hero.y - this.H) * 0.25;
+    }
+    const effSpeed = (this.scrollSpeed + catchUp) * scrollMul;
+    for (const b of this.boards) b.y -= effSpeed;
+    for (const p of this.props)  p.y -= effSpeed;
+    // shift the ball itself by the catch-up component so it stays visible on screen
+    if (catchUp > 0) this.hero.y -= catchUp * scrollMul;
     // laser: constant descent, independent of tutorial slow-mo so pace stays steady
     this.laserY += 0.075;
     const boosted = this.speedBoost > 0;
@@ -337,24 +346,6 @@ export class GameEngine {
       } else {
         this.kill();
       }
-    }
-
-    // outran the scroll — bonus: +N per second while off-bottom, hero rides the edge
-    const edgeY = this.H + this.hero.r;
-    if (this.hero.y > edgeY) {
-      this.hero.y = edgeY;
-      if (this.hero.vy > 0) this.hero.vy = 0;
-      this.belowFrames++;
-      const awardable = Math.floor(this.belowFrames / 60);
-      while (this.belowAwarded < awardable) {
-        this.belowAwarded++;
-        this.score.update(s => s + this.belowAwarded);
-        this.spawnFloatText(`+${this.belowAwarded}`, W/2, this.H/2 - 20);
-        this.opts.onSoundEvent?.('bonus');
-      }
-    } else {
-      this.belowFrames = 0;
-      this.belowAwarded = 0;
     }
 
     // float texts

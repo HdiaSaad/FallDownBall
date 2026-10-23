@@ -1,12 +1,17 @@
 ion-content { --background: #0f0f1a; }
-.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 16px; }
+.grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 14px; padding: 20px 16px calc(env(safe-area-inset-bottom) + 20px);
+}
 .tile {
-  background: #1a1d26; border-radius: 12px; padding: 14px;
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: #1a1d26; border-radius: 14px; padding: 18px 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
   color: #999; text-align: center; opacity: 0.65;
+  min-height: 160px;
 }
 .tile.unlocked { color: #eee; opacity: 1; }
-.icon { font-size: 36px; color: #666; }
+.tile strong { font-size: 15px; line-height: 1.2; }
+.icon { font-size: 46px; color: #666; }
 .tile.unlocked .icon { color: #ffd54f; }
-.tile p { font-size: 12px; margin: 0; color: #999; }
-.check { color: #4fe3c1; font-size: 13px; display: flex; align-items: center; gap: 4px; }
+.tile p { font-size: 13px; line-height: 1.35; margin: 0; color: #999; }
+.check { color: #4fe3c1; font-size: 14px; display: flex; align-items: center; gap: 4px; }
