@@ -43,6 +43,8 @@ export class GameEngine {
   private boards: Board[] = [];
   private props: Prop[] = [];
   private particles: Particle[] = [];
+  private stars: { x: number; y: number; r: number; a: number; phase: number }[] = [];
+  private dust: { x: number; y: number; vx: number; vy: number; len: number; a: number }[] = [];
   private laserY = -30;
   private scrollSpeed = 1.1;
   private tFrame = 0;
@@ -201,8 +203,8 @@ export class GameEngine {
     const scrollMul = this.tutorialMode ? 0.5 : 1;
     for (const b of this.boards) b.y -= this.scrollSpeed * scrollMul;
     for (const p of this.props)  p.y -= this.scrollSpeed * scrollMul;
-    // laser: constant descent so the player isn't surprised by sudden "resume" after a pause
-    this.laserY += 0.075 * scrollMul;
+    // laser: constant descent, independent of tutorial slow-mo so pace stays steady
+    this.laserY += 0.075;
     const boosted = this.speedBoost > 0;
     if (boosted) this.speedBoost--;
 
@@ -324,12 +326,12 @@ export class GameEngine {
     for (const q of this.particles) { q.x += q.vx; q.y += q.vy; q.life--; }
     this.particles = this.particles.filter(q => q.life > 0);
 
-    // laser (teeth reach to laserY + 22)
-    if (this.hero.y - this.hero.r < this.laserY + 22) {
+    // laser (thin beam at laserY)
+    if (this.hero.y - this.hero.r < this.laserY + 2) {
       if (this.hero.shield > 0) {
         this.hero.shield = 0;
         this.hero.vy = 2;
-        this.hero.y  = this.laserY + 24 + this.hero.r + 2;
+        this.hero.y  = this.laserY + 4 + this.hero.r + 2;
         this.burst(this.hero.x, this.hero.y, '#4fe3c1', 20);
         this.events$.next({ kind: 'savedByShield' });
       } else {
@@ -365,38 +367,93 @@ export class GameEngine {
   private render() {
     const ctx = this.ctx;
     const bg = ctx.createLinearGradient(0, 0, 0, this.H);
-    bg.addColorStop(0, '#0a0f1c'); bg.addColorStop(1, '#1a1030');
+    bg.addColorStop(0, '#070a18'); bg.addColorStop(1, '#140826');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, this.H);
 
-    // laser — body + jagged teeth on bottom edge
-    const g = ctx.createLinearGradient(0, this.laserY, 0, this.laserY + 18);
-    g.addColorStop(0, '#ff3058'); g.addColorStop(1, '#550011');
-    ctx.fillStyle = g; ctx.fillRect(0, this.laserY, W, 14);
-    // teeth
-    ctx.fillStyle = '#ff3058';
-    const toothW = 10, toothH = 8;
-    ctx.beginPath();
-    for (let x = 0; x < W; x += toothW) {
-      ctx.moveTo(x, this.laserY + 14);
-      ctx.lineTo(x + toothW / 2, this.laserY + 14 + toothH);
-      ctx.lineTo(x + toothW, this.laserY + 14);
+    // starfield (lazy init on first frame — H is known then)
+    if (this.stars.length === 0) {
+      for (let i = 0; i < 80; i++) {
+        this.stars.push({
+          x: Math.random() * W,
+          y: Math.random() * this.H,
+          r: Math.random() * 1.3 + 0.3,
+          a: 0.3 + Math.random() * 0.6,
+          phase: Math.random() * Math.PI * 2,
+        });
+      }
     }
-    ctx.closePath(); ctx.fill();
-    // dark edge under the teeth
-    ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let x = 0; x < W; x += toothW) {
-      ctx.moveTo(x, this.laserY + 14);
-      ctx.lineTo(x + toothW / 2, this.laserY + 14 + toothH);
-      ctx.lineTo(x + toothW, this.laserY + 14);
+    for (const st of this.stars) {
+      const tw = 0.5 + 0.5 * Math.sin(this.tFrame * 0.04 + st.phase);
+      ctx.fillStyle = `rgba(255,255,255,${st.a * tw})`;
+      ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2); ctx.fill();
     }
-    ctx.stroke();
-    // boards
+
+    // diagonal dust streaks (down-left drift)
+    if (this.dust.length < 8 && Math.random() < 0.08) {
+      this.dust.push({
+        x: Math.random() * W + 20,
+        y: -10,
+        vx: -0.6 - Math.random() * 0.4,
+        vy: 1.8 + Math.random() * 1.2,
+        len: 10 + Math.random() * 20,
+        a: 0.25 + Math.random() * 0.35,
+      });
+    }
+    for (const d of this.dust) {
+      d.x += d.vx; d.y += d.vy;
+      ctx.strokeStyle = `rgba(170,200,255,${d.a})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(d.x, d.y);
+      ctx.lineTo(d.x - d.vx * d.len, d.y - d.vy * d.len);
+      ctx.stroke();
+    }
+    this.dust = this.dust.filter(d => d.y < this.H + 20 && d.x > -20);
+
+    // laser — thin glowing red beam
+    ctx.save();
+    ctx.shadowColor = '#ff2d55';
+    ctx.shadowBlur = 18;
+    // outer halo
+    ctx.fillStyle = 'rgba(255,45,85,0.35)';
+    ctx.fillRect(0, this.laserY - 2, W, 6);
+    // bright core
+    ctx.fillStyle = '#ff2d55';
+    ctx.fillRect(0, this.laserY, W, 2);
+    // hot white inner line
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ffeef2';
+    ctx.fillRect(0, this.laserY, W, 1);
+    ctx.restore();
+    // boards — pill-shaped neon bars
     const boardColor = BOARD_COLORS[Math.floor(this.score() / 100) % BOARD_COLORS.length];
+    const rad = BOARD_H / 2;
+    ctx.save();
+    ctx.shadowColor = boardColor;
+    ctx.shadowBlur = 16;
     ctx.fillStyle = boardColor;
     for (const b of this.boards) {
-      ctx.fillRect(0, b.y, b.gapX, BOARD_H);
-      ctx.fillRect(b.gapX + b.gapW, b.y, W - (b.gapX + b.gapW), BOARD_H);
+      const rightX = b.gapX + b.gapW;
+      const rightW = W - rightX;
+      if (b.gapX >= 2) {
+        ctx.beginPath(); ctx.roundRect(0, b.y, b.gapX, BOARD_H, rad); ctx.fill();
+      }
+      if (rightW >= 2) {
+        ctx.beginPath(); ctx.roundRect(rightX, b.y, rightW, BOARD_H, rad); ctx.fill();
+      }
+    }
+    // inner bright highlight (no shadow) so pills read as emissive
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    for (const b of this.boards) {
+      const rightX = b.gapX + b.gapW;
+      const rightW = W - rightX;
+      if (b.gapX >= 6) ctx.fillRect(3, b.y + 1, b.gapX - 6, 1);
+      if (rightW >= 6) ctx.fillRect(rightX + 3, b.y + 1, rightW - 6, 1);
+    }
+    ctx.restore();
+    // labels on top of bars
+    for (const b of this.boards) {
       if (b.label && !b.consumed) {
         const cx = (b.gapX > W/2) ? b.gapX/2 : b.gapX + b.gapW + (W - b.gapX - b.gapW)/2;
         const isSpeed = b.label === 'speed';
@@ -404,7 +461,6 @@ export class GameEngine {
         ctx.fillRect(cx - 14, b.y - 14, 28, 14);
         ctx.fillStyle = '#000'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(isSpeed ? '»»' : b.label, cx, b.y - 3);
-        ctx.fillStyle = boardColor;
       }
     }
 
@@ -412,8 +468,23 @@ export class GameEngine {
     for (const p of this.props) {
       ctx.save(); ctx.translate(p.x, p.y);
       if (p.kind === 'coin') {
+        ctx.save();
+        ctx.shadowColor = '#ffd54f';
+        ctx.shadowBlur = 10;
+        // outer diamond
         ctx.fillStyle = '#ffd54f';
-        ctx.beginPath(); ctx.arc(0, 0, p.r, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(0, -p.r); ctx.lineTo(p.r*0.75, 0);
+        ctx.lineTo(0, p.r); ctx.lineTo(-p.r*0.75, 0);
+        ctx.closePath(); ctx.fill();
+        // bright inner facet
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#fffbe6';
+        ctx.beginPath();
+        ctx.moveTo(0, -p.r*0.5); ctx.lineTo(p.r*0.35, 0);
+        ctx.lineTo(0, p.r*0.5); ctx.lineTo(-p.r*0.35, 0);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
       } else if (p.kind === 'shield') {
         ctx.fillStyle = '#4fe3c1';
         ctx.beginPath();
@@ -426,14 +497,29 @@ export class GameEngine {
       ctx.restore();
     }
 
-    // trail
+    // flame trail — stretches along the ball's motion direction
     const h = this.hero;
-    for (let i = 0; i < h.trail.length; i++) {
+    ctx.save();
+    ctx.shadowColor = '#ff7a00';
+    ctx.shadowBlur = 10;
+    const stretch = Math.min(1, Math.abs(h.vx) * 0.15);
+    const angle = Math.atan2(h.vy, h.vx);
+    // skip the last trail point — it's the current ball position
+    const tailEnd = Math.max(0, h.trail.length - 1);
+    for (let i = 0; i < tailEnd; i++) {
       const t = h.trail[i];
-      const a = i / h.trail.length;
-      ctx.fillStyle = `rgba(255,255,255,${a*0.4})`;
-      ctx.beginPath(); ctx.arc(t.x, t.y, h.r*a*0.9, 0, Math.PI*2); ctx.fill();
+      const a = i / tailEnd;
+      const r = h.r * (0.18 + a * 0.5);
+      const rx = r * (1 + stretch * 0.9);
+      const ry = r * (1 - stretch * 0.2);
+      let col: string;
+      if (a < 0.4) col = `rgba(255,45,0,${a * 0.55})`;
+      else if (a < 0.75) col = `rgba(255,140,30,${a * 0.75})`;
+      else col = `rgba(255,230,120,${a * 0.9})`;
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.ellipse(t.x, t.y, rx, ry, angle, 0, Math.PI * 2); ctx.fill();
     }
+    ctx.restore();
 
     // hero shield aura
     if (h.shield > 0) {
@@ -484,17 +570,13 @@ export class GameEngine {
         });
       }
     }
-    const grad = ctx.createRadialGradient(h.x - h.r*0.35, h.y - h.r*0.4, h.r*0.15, h.x, h.y, h.r);
-    grad.addColorStop(0, '#ffffff');
-    grad.addColorStop(0.35, base);
-    grad.addColorStop(1, this.darken(base, 0.45));
-    ctx.fillStyle = grad;
-    ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 1.5;
-    ctx.stroke();
-    // specular dot
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    ctx.beginPath(); ctx.arc(h.x - h.r*0.35, h.y - h.r*0.4, h.r*0.22, 0, Math.PI*2); ctx.fill();
+    // flat 2D disc with neon glow
+    ctx.save();
+    ctx.shadowColor = base;
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = base;
+    ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
 
     // particles
     for (const q of this.particles) {
