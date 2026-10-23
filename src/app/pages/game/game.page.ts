@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonContent } from '@ionic/angular/ion-content';
 import { IonButton } from '@ionic/angular/ion-button';
@@ -14,6 +14,7 @@ import { AdsService } from '../../core/services/ads.service';
 import { AudioService } from '../../core/services/audio.service';
 import { AchievementService } from '../../core/services/achievement.service';
 import { MissionsService } from '../../core/services/missions.service';
+import { TutorialService } from '../../core/services/tutorial.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { ACHIEVEMENTS } from '../../core/game/achievement-catalog';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
@@ -38,11 +39,16 @@ export class GamePage implements OnDestroy {
   private router = inject(Router);
   private achievements = inject(AchievementService);
   private missions = inject(MissionsService);
+  tutorial = inject(TutorialService);
   private i18n = inject(I18nService);
   private toastCtrl = inject(ToastController);
   paused = signal(false);
   private coinsThisRun = 0;
   private runStartMs = 0;
+  private tutLeftTaps = 0;
+  private tutRightTaps = 0;
+  private tutPickups = 0;
+  private tutBricks = 0;
 
   constructor() { addIcons({ pauseOutline, playOutline, homeOutline, refreshOutline }); }
 
@@ -54,7 +60,12 @@ export class GamePage implements OnDestroy {
 
     this.coinsThisRun = 0;
     this.runStartMs = performance.now();
+    this.tutLeftTaps = 0;
+    this.tutRightTaps = 0;
+    this.tutPickups = 0;
+    this.tutBricks = 0;
     this.ads.hideBanner();
+    const launchTutorial = this.tutorial.shouldLaunch();
     const engine = new GameEngine(canvas, {
       skinId: this.wallet.equippedSkin(),
       sound:  this.settings.sound(),
@@ -65,7 +76,40 @@ export class GamePage implements OnDestroy {
       },
     });
     this.engineSig.set(engine);
+    if (launchTutorial) {
+      this.tutorial.start();
+      engine.setTutorialMode(true, [
+        { board: 5, prop: 'shield' },
+        { board: 10, prop: 'magnet' },
+        { board: 14, label: '×2' },
+        { board: 18, label: '+5' },
+        { board: 22, label: 'speed' },
+      ]);
+    }
+    let step2Start = -1;
+    effect(() => {
+      const s = this.engine?.score() ?? 0;
+      if (this.tutorial.step() === 2) {
+        if (step2Start < 0) step2Start = s;
+        if (s - step2Start >= 3) this.tutorial.advanceStep();
+      } else {
+        step2Start = -1;
+      }
+    });
     engine.events$.subscribe(ev => {
+      if (this.tutorial.active()) {
+        if (this.tutorial.step() === 3 && (ev.kind === 'shield' || ev.kind === 'magnet')) {
+          this.tutPickups++;
+          if (this.tutPickups >= 2) this.tutorial.advanceStep();
+        }
+        if (this.tutorial.step() === 4 && (ev.kind === 'bonus' || ev.kind === 'speedBrick')) {
+          this.tutBricks++;
+          if (this.tutBricks >= 3) {
+            this.tutorial.markDone();
+            this.engine.setTutorialMode(false);
+          }
+        }
+      }
       if (ev.kind === 'coin') {
         this.wallet.addCoins(ev.value);
         this.coinsThisRun += ev.value;
@@ -109,8 +153,13 @@ export class GamePage implements OnDestroy {
     const keys = { l: false, r: false };
     const onDown = (clientX: number) => {
       const rect = canvas.getBoundingClientRect();
-      if ((clientX - rect.left) < rect.width / 2) keys.l = true; else keys.r = true;
+      const left = (clientX - rect.left) < rect.width / 2;
+      if (left) keys.l = true; else keys.r = true;
       this.engine.setInput(keys.l, keys.r);
+      if (this.tutorial.step() === 1) {
+        if (left) this.tutLeftTaps++; else this.tutRightTaps++;
+        if (this.tutLeftTaps >= 2 && this.tutRightTaps >= 2) this.tutorial.advanceStep();
+      }
     };
     const onUp = () => { keys.l = keys.r = false; this.engine.setInput(false, false); };
     canvas.addEventListener('pointerdown', e => onDown(e.clientX));
@@ -133,6 +182,11 @@ export class GamePage implements OnDestroy {
   }
   replay() { this.coinsThisRun = 0; this.runStartMs = performance.now(); this.engine.reset(); this.paused.set(false); }
   home()   { this.router.navigateByUrl('/'); }
+
+  async skipTutorial() {
+    await this.tutorial.skip();
+    this.engine.setTutorialMode(false);
+  }
 
   private async notifyUnlocks(newly: string[]) {
     for (const id of newly) {

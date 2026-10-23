@@ -88,6 +88,12 @@ const T: Record<string, Record<Locale, string>> = {
   'mission.claimed':                  { en: 'Claimed',                                       fr: 'Réclamé' },
   'mission.rewardToast':              { en: '+{reward} coins',                               fr: '+{reward} pièces' },
   'mission.title':                    { en: 'Daily Missions',                                fr: 'Missions du jour' },
+  'tutorial.skip':   { en: 'Skip',  fr: 'Passer' },
+  'tutorial.replay': { en: 'Replay tutorial', fr: 'Rejouer le tutoriel' },
+  'tutorial.step1':  { en: 'Tap left or right to move the ball.',           fr: 'Appuie à gauche ou à droite pour déplacer la balle.' },
+  'tutorial.step2':  { en: 'Fall through the gaps. Avoid the red laser!',   fr: 'Chute dans les trous. Évite le laser rouge !' },
+  'tutorial.step3':  { en: 'Collect blue shields and purple magnets.',      fr: 'Ramasse les boucliers bleus et aimants violets.' },
+  'tutorial.step4':  { en: 'Yellow bricks give bonus. Green bricks boost speed.', fr: 'Les briques jaunes donnent un bonus. Les vertes accélèrent la balle.' },
 };
 
 @Injectable({ providedIn: 'root' })

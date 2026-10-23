@@ -39,4 +39,9 @@
       <ion-item><ion-radio value="fr">{{ 'settings.lang.fr' | translate }}</ion-radio></ion-item>
     </ion-radio-group>
   </ion-list>
+  <ion-list inset="true">
+    <ion-item button (click)="replayTutorial()">
+      <ion-label>{{ 'tutorial.replay' | translate }}</ion-label>
+    </ion-item>
+  </ion-list>
 </ion-content>
