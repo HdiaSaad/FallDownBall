@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, ViewChild, computed, effect, inject, signal } from '@angular/core';
+import { Component, ElementRef, Injector, OnDestroy, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonContent } from '@ionic/angular/ion-content';
 import { IonButton } from '@ionic/angular/ion-button';
@@ -41,6 +41,7 @@ export class GamePage implements OnDestroy {
   tutorial = inject(TutorialService);
   private i18n = inject(I18nService);
   private toastCtrl = inject(ToastController);
+  private injector = inject(Injector);
   paused = signal(false);
   private coinsThisRun = 0;
   private runStartMs = 0;
@@ -93,7 +94,7 @@ export class GamePage implements OnDestroy {
       } else {
         step2Start = -1;
       }
-    });
+    }, { injector: this.injector });
     engine.events$.subscribe(ev => {
       if (this.tutorial.active()) {
         if (this.tutorial.step() === 3 && (ev.kind === 'shield' || ev.kind === 'magnet')) {
