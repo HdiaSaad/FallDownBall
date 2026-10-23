@@ -1,4 +1,5 @@
 import { Injectable, effect, inject } from '@angular/core';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { SettingsService } from './settings.service';
 
 export type SoundName =
@@ -105,5 +106,55 @@ export class AudioService {
     osc.connect(g).connect(ctx.destination);
     osc.start();
     osc.stop(ctx.currentTime + dur);
+  }
+
+  async haptic(name: SoundName): Promise<void> {
+    if (!this.settings.vibration()) return;
+    switch (name) {
+      case 'coin':
+        await Haptics.selectionStart();
+        break;
+      case 'shield':
+        await Haptics.impact({ style: ImpactStyle.Light });
+        setTimeout(() => Haptics.impact({ style: ImpactStyle.Light }), 100);
+        break;
+      case 'magnet':
+        await Haptics.impact({ style: ImpactStyle.Medium });
+        break;
+      case 'bonus':
+        await Haptics.impact({ style: ImpactStyle.Medium });
+        setTimeout(() => Haptics.impact({ style: ImpactStyle.Light }), 80);
+        break;
+      case 'speedBrick':
+        await Haptics.impact({ style: ImpactStyle.Light });
+        setTimeout(() => Haptics.impact({ style: ImpactStyle.Light }), 60);
+        setTimeout(() => Haptics.impact({ style: ImpactStyle.Light }), 120);
+        break;
+      case 'death':
+        await Haptics.impact({ style: ImpactStyle.Heavy });
+        setTimeout(() => Haptics.impact({ style: ImpactStyle.Heavy }), 150);
+        break;
+      case 'combo':
+        await Haptics.impact({ style: ImpactStyle.Light });
+        setTimeout(() => Haptics.impact({ style: ImpactStyle.Light }), 50);
+        setTimeout(() => Haptics.impact({ style: ImpactStyle.Light }), 100);
+        setTimeout(() => Haptics.impact({ style: ImpactStyle.Medium }), 200);
+        break;
+      case 'perfectRun':
+        try {
+          if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+            (navigator as any).vibrate([30, 50, 30, 50, 100]);
+          } else {
+            await Haptics.impact({ style: ImpactStyle.Heavy });
+          }
+        } catch { /* ignore */ }
+        break;
+      case 'revive':
+      case 'win':
+      case 'spin':
+      case 'click':
+        // no haptic for these
+        break;
+    }
   }
 }

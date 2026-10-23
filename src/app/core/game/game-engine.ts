@@ -247,9 +247,13 @@ export class GameEngine {
           } else {
             this.speedBoost = SPEED_BOOST_FRAMES;
             this.burst(this.hero.x, b.y, '#76ff03', 18);
+            this.opts.onSoundEvent?.('speedBrick');
+            this.events$.next({ kind: 'speedBrick' });
           }
-          this.events$.next({ kind: 'bonus' });
-          this.opts.onSoundEvent?.('bonus');
+          if (b.label !== 'speed') {
+            this.events$.next({ kind: 'bonus' });
+            this.opts.onSoundEvent?.('bonus');
+          }
         }
       }
     }

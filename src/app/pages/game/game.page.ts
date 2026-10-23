@@ -6,7 +6,6 @@ import { IonIcon } from '@ionic/angular/ion-icon';
 import { ToastController } from '@ionic/angular/toast-controller';
 import { addIcons } from 'ionicons';
 import { pauseOutline, playOutline, homeOutline, refreshOutline } from 'ionicons/icons';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { GameEngine } from '../../core/game/game-engine';
 import { WalletService } from '../../core/services/wallet.service';
 import { SettingsService } from '../../core/services/settings.service';
@@ -71,8 +70,7 @@ export class GamePage implements OnDestroy {
       sound:  this.settings.sound(),
       onSoundEvent: (name) => {
         this.audio.play(name);
-        if (name === 'death' && this.settings.vibration()) Haptics.impact({ style: ImpactStyle.Heavy });
-        if (name === 'coin'  && this.settings.vibration()) Haptics.impact({ style: ImpactStyle.Light });
+        this.audio.haptic(name);
       },
     });
     this.engineSig.set(engine);
