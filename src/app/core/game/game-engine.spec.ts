@@ -58,4 +58,22 @@ describe('GameEngine', () => {
       (engine as any).kill();
     })
   );
+
+  it('caps combo multi at COMBO_MULTI_CAP (10)', () => {
+    // Simulate 6 landings of +2 each → should cap at 10
+    for (let i = 0; i < 6; i++) {
+      (engine as any).comboMulti.update((m: number) => Math.min(m + 2, 10));
+    }
+    expect(engine.comboMulti()).toBe(10);
+  });
+
+  it('resets combo state on reset()', () => {
+    (engine as any).comboMulti.set(5);
+    (engine as any).comboMultiTimer = 100;
+    (engine as any).wooowCount = 2;
+    engine.reset();
+    expect(engine.comboMulti()).toBe(1);
+    expect(engine.comboMultiFraction()).toBe(0);
+    expect((engine as any).wooowCount).toBe(0);
+  });
 });

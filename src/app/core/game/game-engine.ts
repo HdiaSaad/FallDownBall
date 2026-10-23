@@ -26,6 +26,8 @@ const COLOR_CYCLE = ['#ffd54f','#4fc3f7','#b388ff','#4fe3c1','#ff2d55','#ffab40'
 const BOARD_COLORS = ['#4fc3f7','#64ffda','#b388ff','#ffd54f','#ff6a00','#ff2d55','#9ccc65','#f06292','#4fe3c1','#ffab40'];
 const SPEED_BOOST_FRAMES = 240;
 const SPEED_BOOST_MULT = 1.8;
+const COMBO_WINDOW_FRAMES = 240;
+const COMBO_MULTI_CAP = 10;
 
 export class GameEngine {
   readonly score = signal(0);
@@ -52,6 +54,10 @@ export class GameEngine {
   private stepsSinceLanding = 0;
   private comboTimer = 0;
   private speedBoost = 0;
+  private wooowCount = 0;
+  readonly comboMulti = signal(1);
+  readonly comboMultiFraction = signal(0);
+  private comboMultiTimer = 0;
 
   constructor(private canvas: HTMLCanvasElement, private opts: GameEngineOpts) {
     this.ctx = canvas.getContext('2d')!;
@@ -73,6 +79,10 @@ export class GameEngine {
     this.floatTexts = [];
     this.wasInAir = true; this.stepsSinceLanding = 0; this.comboTimer = 0;
     this.speedBoost = 0;
+    this.wooowCount = 0;
+    this.comboMulti.set(1);
+    this.comboMultiFraction.set(0);
+    this.comboMultiTimer = 0;
     this.score.set(0); this.coins.set(0); this.state.set('playing');
     for (let y = 220; y < H + 220; y += 95) this.spawnBoard(y);
   }
@@ -153,6 +163,11 @@ export class GameEngine {
 
   private update() {
     this.tFrame++;
+    if (this.comboMultiTimer > 0) {
+      this.comboMultiTimer--;
+      this.comboMultiFraction.set(this.comboMultiTimer / COMBO_WINDOW_FRAMES);
+      if (this.comboMultiTimer === 0) this.comboMulti.set(1);
+    }
     // scroll
     for (const b of this.boards) b.y -= this.scrollSpeed;
     for (const p of this.props)  p.y -= this.scrollSpeed;
@@ -233,8 +248,20 @@ export class GameEngine {
           this.spawnFloatText('Wooow!', W/2, H/2 - 70, 44, '#ff3058');
         }
         this.comboTimer = 150;
-        this.events$.next({ kind: 'bonus' });
-        this.opts.onSoundEvent?.('bonus');
+        // combo multi + event
+        this.comboMulti.update(m => Math.min(m + n, COMBO_MULTI_CAP));
+        this.comboMultiTimer = COMBO_WINDOW_FRAMES;
+        this.comboMultiFraction.set(1);
+        this.events$.next({ kind: 'combo', steps: n });
+        this.opts.onSoundEvent?.('combo');
+        if (isCombo) {
+          this.wooowCount++;
+          if (this.wooowCount === 3) {
+            this.spawnFloatText('PERFECT!', W/2, H/2 - 140, 72, '#ff2d55');
+            this.events$.next({ kind: 'perfectRun' });
+            this.opts.onSoundEvent?.('perfectRun');
+          }
+        }
       }
       this.stepsSinceLanding = 0;
     }
