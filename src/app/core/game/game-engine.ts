@@ -17,7 +17,7 @@ export interface GameEngineOpts {
 export type GameEvent =
   | { kind: 'shield' | 'magnet' | 'bonus' | 'savedByShield' | 'perfectRun' | 'speedBrick' }
   | { kind: 'coin'; value: number }
-  | { kind: 'combo'; steps: number }
+  | { kind: 'combo'; steps: number; wooow: boolean }
   | { kind: 'gameOver'; score: number; coins: number; newRecord?: boolean };
 
 const W = 360, H = 640;
@@ -253,7 +253,7 @@ export class GameEngine {
         this.comboMulti.update(m => Math.min(m + n, COMBO_MULTI_CAP));
         this.comboMultiTimer = COMBO_WINDOW_FRAMES;
         this.comboMultiFraction.set(1);
-        this.events$.next({ kind: 'combo', steps: n });
+        this.events$.next({ kind: 'combo', steps: n, wooow: isCombo });
         this.opts.onSoundEvent?.('combo');
         if (isCombo) {
           this.wooowCount++;
