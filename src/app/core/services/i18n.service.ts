@@ -52,6 +52,7 @@ const T: Record<string, Record<Locale, string>> = {
   'settings.language':    { en: 'Language',            fr: 'Langue' },
   'settings.lang.en':     { en: 'English',             fr: 'Anglais' },
   'settings.lang.fr':     { en: 'French',              fr: 'Français' },
+  'achievements.title':   { en: 'Achievements',        fr: 'Succès' },
   'achievement.unlocked':             { en: '🏆 {name} unlocked (+{reward} coins)',          fr: '🏆 {name} débloqué (+{reward} pièces)' },
   'achievement.first_blood.name':     { en: 'First Fall',                                    fr: 'Première chute' },
   'achievement.first_blood.desc':     { en: 'Finish your first game',                        fr: 'Terminer ta première partie' },

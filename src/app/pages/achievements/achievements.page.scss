@@ -1,0 +1,12 @@
+ion-content { --background: #0f0f1a; }
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 16px; }
+.tile {
+  background: #1a1d26; border-radius: 12px; padding: 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  color: #999; text-align: center; opacity: 0.65;
+}
+.tile.unlocked { color: #eee; opacity: 1; }
+.icon { font-size: 36px; color: #666; }
+.tile.unlocked .icon { color: #ffd54f; }
+.tile p { font-size: 12px; margin: 0; color: #999; }
+.check { color: #4fe3c1; font-size: 13px; display: flex; align-items: center; gap: 4px; }

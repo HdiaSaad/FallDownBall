@@ -7,4 +7,5 @@ export const routes: Routes = [
   { path: 'settings',  loadComponent: () => import('./pages/settings/settings.page').then(m => m.SettingsPage) },
   { path: 'customize', loadComponent: () => import('./pages/customize/customize.page').then(m => m.CustomizePage) },
   { path: 'gift',      loadComponent: () => import('./pages/gift/gift.page').then(m => m.GiftPage) },
+  { path: 'achievements', loadComponent: () => import('./pages/achievements/achievements.page').then(m => m.AchievementsPage) },
 ];
