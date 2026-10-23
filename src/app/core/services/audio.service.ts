@@ -3,7 +3,8 @@ import { SettingsService } from './settings.service';
 
 export type SoundName =
   | 'coin' | 'shield' | 'magnet' | 'bonus'
-  | 'death' | 'revive' | 'win' | 'spin' | 'click';
+  | 'death' | 'revive' | 'win' | 'spin' | 'click'
+  | 'combo' | 'perfectRun' | 'speedBrick';
 
 @Injectable({ providedIn: 'root' })
 export class AudioService {
@@ -70,6 +71,9 @@ export class AudioService {
       case 'win':    this.arpeggio(ctx, [523, 659, 784, 1047, 1319], 0.55, 'square'); break;
       case 'spin':   this.sweep(ctx, 110, 440, 0.25, 'triangle');        break;
       case 'click':  this.arpeggio(ctx, [660], 0.04, 'square');          break;
+      case 'combo':      this.arpeggio(ctx, [440, 660, 880], 0.12, 'triangle'); break;
+      case 'perfectRun': this.arpeggio(ctx, [523, 659, 784, 1047, 1319, 1760], 0.6, 'square'); break;
+      case 'speedBrick': this.sweep(ctx, 440, 1760, 0.18, 'sawtooth'); break;
     }
   }
 

@@ -11,11 +11,12 @@ import { getSkin } from './catalog';
 export interface GameEngineOpts {
   skinId: number;
   sound: boolean;
-  onSoundEvent?: (name: 'coin'|'shield'|'magnet'|'bonus'|'death'|'revive') => void;
+  onSoundEvent?: (name: 'coin'|'shield'|'magnet'|'bonus'|'death'|'revive'|'combo'|'perfectRun'|'speedBrick') => void;
 }
 
 export type GameEvent =
-  | { kind: 'coin' | 'shield' | 'magnet' | 'bonus' | 'savedByShield' }
+  | { kind: 'coin' | 'shield' | 'magnet' | 'bonus' | 'savedByShield' | 'perfectRun' | 'speedBrick' }
+  | { kind: 'combo'; steps: number }
   | { kind: 'gameOver'; score: number; coins: number; newRecord?: boolean };
 
 const W = 360, H = 640;
