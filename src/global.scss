@@ -58,3 +58,26 @@ ion-header ion-toolbar ion-back-button {
   --padding-start: 4px;
   --padding-end: 4px;
 }
+
+ion-toast.achievement-toast {
+  --background: linear-gradient(135deg, #2a1b00 0%, #4a2e00 50%, #2a1b00 100%);
+  --color: #ffd54f;
+  --border-radius: 14px;
+  --border-color: #ffd54f;
+  --border-style: solid;
+  --border-width: 1.5px;
+  --box-shadow: 0 8px 24px rgba(255, 184, 0, 0.35), 0 0 0 1px rgba(255, 213, 79, 0.3);
+  --min-height: 56px;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.2px;
+}
+ion-toast.achievement-toast::part(icon) {
+  color: #ffd54f;
+  font-size: 22px;
+  margin-inline-end: 10px;
+  filter: drop-shadow(0 0 6px rgba(255, 213, 79, 0.6));
+}
+ion-toast.achievement-toast::part(message) {
+  color: #fff8dc;
+}

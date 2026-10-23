@@ -5,7 +5,7 @@ import { IonButton } from '@ionic/angular/ion-button';
 import { IonIcon } from '@ionic/angular/ion-icon';
 import { ToastController } from '@ionic/angular/toast-controller';
 import { addIcons } from 'ionicons';
-import { pauseOutline, playOutline, homeOutline, refreshOutline } from 'ionicons/icons';
+import { pauseOutline, playOutline, homeOutline, refreshOutline, trophy } from 'ionicons/icons';
 import { GameEngine } from '../../core/game/game-engine';
 import { WalletService } from '../../core/services/wallet.service';
 import { SettingsService } from '../../core/services/settings.service';
@@ -50,7 +50,7 @@ export class GamePage implements OnDestroy {
   private tutPickups = 0;
   private tutBricks = 0;
 
-  constructor() { addIcons({ pauseOutline, playOutline, homeOutline, refreshOutline }); }
+  constructor() { addIcons({ pauseOutline, playOutline, homeOutline, refreshOutline, trophy }); }
 
   ionViewDidEnter() {
     const canvas = this.cvRef.nativeElement;
@@ -95,6 +95,10 @@ export class GamePage implements OnDestroy {
         step2Start = -1;
       }
     }, { injector: this.injector });
+    effect(() => {
+      const s = this.engine?.score() ?? 0;
+      if (s > 0) this.notifyUnlocks(this.achievements.recordEvent({ score: s }));
+    }, { injector: this.injector });
     engine.events$.subscribe(ev => {
       if (this.tutorial.active()) {
         if (this.tutorial.step() === 3 && (ev.kind === 'shield' || ev.kind === 'magnet')) {
@@ -113,6 +117,7 @@ export class GamePage implements OnDestroy {
         this.wallet.addCoins(ev.value);
         this.coinsThisRun += ev.value;
         this.missions.recordEvent('coin_run', this.coinsThisRun);
+        this.notifyUnlocks(this.achievements.recordEvent({ coinsThisRun: this.coinsThisRun }));
       }
       if (ev.kind === 'shield' || ev.kind === 'magnet' || ev.kind === 'bonus' || ev.kind === 'speedBrick') {
         this.missions.recordEvent('powerup');
@@ -187,17 +192,32 @@ export class GamePage implements OnDestroy {
     this.engine.setTutorialMode(false);
   }
 
+  private unlockQueue: string[] = [];
+  private unlockBusy = false;
   private async notifyUnlocks(newly: string[]) {
-    for (const id of newly) {
-      const def = ACHIEVEMENTS.find(a => a.id === id);
-      if (!def) continue;
-      const t = await this.toastCtrl.create({
-        message: this.i18n.t('achievement.unlocked', { name: this.i18n.t(def.nameKey), reward: def.reward }),
-        duration: 2000,
-        color: 'success',
-        position: 'top',
-      });
-      await t.present();
+    if (!newly.length) return;
+    this.unlockQueue.push(...newly);
+    if (this.unlockBusy) return;
+    this.unlockBusy = true;
+    try {
+      while (this.unlockQueue.length) {
+        const id = this.unlockQueue.shift()!;
+        const def = ACHIEVEMENTS.find(a => a.id === id);
+        if (!def) continue;
+        this.audio.play('win');
+        this.audio.haptic('bonus');
+        const t = await this.toastCtrl.create({
+          message: this.i18n.t('achievement.unlocked', { name: this.i18n.t(def.nameKey), reward: def.reward }),
+          duration: 2200,
+          position: 'top',
+          cssClass: 'achievement-toast',
+          icon: 'trophy',
+        });
+        await t.present();
+        await t.onDidDismiss();
+      }
+    } finally {
+      this.unlockBusy = false;
     }
   }
 

@@ -65,7 +65,7 @@ export class GameEngine {
   constructor(private canvas: HTMLCanvasElement, private opts: GameEngineOpts) {
     this.ctx = canvas.getContext('2d')!;
     this.hero = createHero(W/2, 120, opts.skinId);
-    for (let y = 220; y < H + 220; y += 95) this.spawnBoard(y);
+    this.spawnStarterBoards();
     this.loop = this.loop.bind(this);
     this.rafId = requestAnimationFrame(this.loop);
   }
@@ -88,7 +88,7 @@ export class GameEngine {
     this.comboMultiFraction.set(0);
     this.comboMultiTimer = 0;
     this.score.set(0); this.coins.set(0); this.state.set('playing');
-    for (let y = 220; y < H + 220; y += 95) this.spawnBoard(y);
+    this.spawnStarterBoards();
   }
   revive() {
     if (this.state() !== 'over') return;
@@ -123,6 +123,19 @@ export class GameEngine {
   setTilt(gamma: number) {
     // gamma -90..90 → vx scaled
     this.tiltVx = Math.max(-MOVE, Math.min(MOVE, gamma / 10));
+  }
+
+  private spawnStarterBoards() {
+    // First board: force gap to the edge so the ball always lands on spawn.
+    // This gives the player a moment to orient before navigating real gaps.
+    const leftSide = Math.random() < 0.5;
+    const starterGapX = leftSide ? 10 : W - GAP_W - 10;
+    this.boards.push({ y: 220, gapX: starterGapX, gapW: GAP_W, label: null, consumed: false });
+    // Second board: gap on the opposite side — a clear navigable path.
+    const secondGapX = leftSide ? W - GAP_W - 10 : 10;
+    this.boards.push({ y: 315, gapX: secondGapX, gapW: GAP_W, label: null, consumed: false });
+    // Remaining boards: random as usual.
+    for (let y = 410; y < H + 220; y += 95) this.spawnBoard(y);
   }
 
   private spawnBoard(y: number) {
@@ -185,11 +198,8 @@ export class GameEngine {
     const scrollMul = this.tutorialMode ? 0.5 : 1;
     for (const b of this.boards) b.y -= this.scrollSpeed * scrollMul;
     for (const p of this.props)  p.y -= this.scrollSpeed * scrollMul;
-    // laser rhythm: tutorial: 200f move (~3.3s) + 100f pause; normal: 120f move (~2s) + 60f pause — repeat
-    const cyclePeriod = this.tutorialMode ? 300 : 180;
-    const cycleMove = this.tutorialMode ? 200 : 120;
-    const cycle = this.tFrame % cyclePeriod;
-    if (cycle < cycleMove) this.laserY += 0.11 * scrollMul;
+    // laser: constant descent so the player isn't surprised by sudden "resume" after a pause
+    this.laserY += 0.075 * scrollMul;
     const boosted = this.speedBoost > 0;
     if (boosted) this.speedBoost--;
 
@@ -356,9 +366,6 @@ export class GameEngine {
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
     // laser — body + jagged teeth on bottom edge
-    const rCyclePeriod = this.tutorialMode ? 300 : 180;
-    const rCycleMove = this.tutorialMode ? 200 : 120;
-    const laserPaused = this.tFrame % rCyclePeriod >= rCycleMove;
     const g = ctx.createLinearGradient(0, this.laserY, 0, this.laserY + 18);
     g.addColorStop(0, '#ff3058'); g.addColorStop(1, '#550011');
     ctx.fillStyle = g; ctx.fillRect(0, this.laserY, W, 14);
@@ -381,13 +388,6 @@ export class GameEngine {
       ctx.lineTo(x + toothW, this.laserY + 14);
     }
     ctx.stroke();
-    // pulsing glow when paused — tells the player "it's about to move again"
-    if (laserPaused) {
-      const pulse = 0.3 + 0.3 * Math.sin(this.tFrame * 0.3);
-      ctx.fillStyle = `rgba(255,80,100,${pulse})`;
-      ctx.fillRect(0, this.laserY + 14 + toothH, W, 2);
-    }
-
     // boards
     const boardColor = BOARD_COLORS[Math.floor(this.score() / 100) % BOARD_COLORS.length];
     ctx.fillStyle = boardColor;
