@@ -59,6 +59,8 @@ export class GameEngine {
   readonly comboMulti = signal(1);
   readonly comboMultiFraction = signal(0);
   private comboMultiTimer = 0;
+  private tutorialMode = false;
+  private forcedSpawns: Array<{ board: number; label?: 'speed' | '×2' | '+5'; prop?: 'shield' | 'magnet' }> = [];
 
   constructor(private canvas: HTMLCanvasElement, private opts: GameEngineOpts) {
     this.ctx = canvas.getContext('2d')!;
@@ -111,6 +113,11 @@ export class GameEngine {
     return `rgb(${r|0},${g|0},${b|0})`;
   }
 
+  setTutorialMode(on: boolean, forcedSpawns: typeof this.forcedSpawns = []): void {
+    this.tutorialMode = on;
+    this.forcedSpawns = [...forcedSpawns];
+  }
+
   setInput(left: boolean, right: boolean) { this.keys.l = left; this.keys.r = right; }
   setTilt(gamma: number) {
     // gamma -90..90 → vx scaled
@@ -118,14 +125,18 @@ export class GameEngine {
   }
 
   private spawnBoard(y: number) {
+    const forced = this.forcedSpawns.shift();
     const gapX = Math.random() * (W - GAP_W);
     let label: Board['label'] = null;
     if (Math.random() < 1/5) {
       const t = Math.random();
       label = t < 1/3 ? '×2' : t < 2/3 ? '+5' : 'speed';
     }
+    if (forced?.label) label = forced.label;
     this.boards.push({ y, gapX, gapW: GAP_W, label, consumed: false });
-    if (Math.random() < 1/6) {
+    if (forced?.prop) {
+      this.props.push({ x: gapX + GAP_W / 2, y: y - 20, r: 10, kind: forced.prop });
+    } else if (Math.random() < 1/6) {
       const kinds: Array<'coin'|'shield'|'magnet'> = ['coin','shield','magnet','coin','coin'];
       const kind = kinds[Math.floor(Math.random() * kinds.length)];
       const sideX = Math.random() < 0.5
@@ -170,11 +181,14 @@ export class GameEngine {
       if (this.comboMultiTimer === 0) this.comboMulti.set(1);
     }
     // scroll
-    for (const b of this.boards) b.y -= this.scrollSpeed;
-    for (const p of this.props)  p.y -= this.scrollSpeed;
-    // laser rhythm: move for ~2s, pause for ~0.9s — repeat
-    const cycle = this.tFrame % 180;
-    if (cycle < 120) this.laserY += 0.11;
+    const scrollMul = this.tutorialMode ? 0.5 : 1;
+    for (const b of this.boards) b.y -= this.scrollSpeed * scrollMul;
+    for (const p of this.props)  p.y -= this.scrollSpeed * scrollMul;
+    // laser rhythm: move for ~2s (tutorialMode: 200/300), pause for ~0.9s — repeat
+    const cyclePeriod = this.tutorialMode ? 300 : 180;
+    const cycleMove = this.tutorialMode ? 200 : 120;
+    const cycle = this.tFrame % cyclePeriod;
+    if (cycle < cycleMove) this.laserY += 0.11 * scrollMul;
     const boosted = this.speedBoost > 0;
     if (boosted) this.speedBoost--;
 
@@ -337,7 +351,9 @@ export class GameEngine {
     ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
 
     // laser — body + jagged teeth on bottom edge
-    const laserPaused = this.tFrame % 180 >= 120;
+    const rCyclePeriod = this.tutorialMode ? 300 : 180;
+    const rCycleMove = this.tutorialMode ? 200 : 120;
+    const laserPaused = this.tFrame % rCyclePeriod >= rCycleMove;
     const g = ctx.createLinearGradient(0, this.laserY, 0, this.laserY + 18);
     g.addColorStop(0, '#ff3058'); g.addColorStop(1, '#550011');
     ctx.fillStyle = g; ctx.fillRect(0, this.laserY, W, 14);
