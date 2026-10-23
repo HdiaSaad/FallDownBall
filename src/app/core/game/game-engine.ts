@@ -74,6 +74,7 @@ export class GameEngine {
   pause()  { if (this.state() === 'playing') this.state.set('paused'); }
   resume() { if (this.state() === 'paused')  this.state.set('playing'); }
   reset()  {
+    this.tutorialMode = false; this.forcedSpawns = [];
     this.hero = createHero(W/2, 120, this.opts.skinId);
     this.boards = []; this.props = []; this.particles = [];
     this.laserY = -30; this.scrollSpeed = 1.1; this.tFrame = 0;
@@ -184,7 +185,7 @@ export class GameEngine {
     const scrollMul = this.tutorialMode ? 0.5 : 1;
     for (const b of this.boards) b.y -= this.scrollSpeed * scrollMul;
     for (const p of this.props)  p.y -= this.scrollSpeed * scrollMul;
-    // laser rhythm: move for ~2s (tutorialMode: 200/300), pause for ~0.9s — repeat
+    // laser rhythm: tutorial: 200f move (~3.3s) + 100f pause; normal: 120f move (~2s) + 60f pause — repeat
     const cyclePeriod = this.tutorialMode ? 300 : 180;
     const cycleMove = this.tutorialMode ? 200 : 120;
     const cycle = this.tFrame % cyclePeriod;
