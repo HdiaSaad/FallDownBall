@@ -47,8 +47,6 @@ export class GamePage implements OnDestroy {
   private runStartMs = 0;
   private tutLeftTaps = 0;
   private tutRightTaps = 0;
-  private tutPickups = 0;
-  private tutBricks = 0;
 
   constructor() { addIcons({ pauseOutline, playOutline, homeOutline, refreshOutline, trophy }); }
 
@@ -67,8 +65,6 @@ export class GamePage implements OnDestroy {
     this.runStartMs = performance.now();
     this.tutLeftTaps = 0;
     this.tutRightTaps = 0;
-    this.tutPickups = 0;
-    this.tutBricks = 0;
     this.ads.hideBanner();
     const launchTutorial = this.tutorial.shouldLaunch();
     const engine = new GameEngine(canvas, {
@@ -81,44 +77,12 @@ export class GamePage implements OnDestroy {
       },
     });
     this.engineSig.set(engine);
-    if (launchTutorial) {
-      this.tutorial.start();
-      engine.setTutorialMode(true, [
-        { board: 5, prop: 'shield' },
-        { board: 10, prop: 'magnet' },
-        { board: 14, label: '×2' },
-        { board: 18, label: '+5' },
-        { board: 22, label: 'speed' },
-      ]);
-    }
-    let step2Start = -1;
-    effect(() => {
-      const s = this.engine?.score() ?? 0;
-      if (this.tutorial.step() === 2) {
-        if (step2Start < 0) step2Start = s;
-        if (s - step2Start >= 3) this.tutorial.advanceStep();
-      } else {
-        step2Start = -1;
-      }
-    }, { injector: this.injector });
+    if (launchTutorial) this.tutorial.start();
     effect(() => {
       const s = this.engine?.score() ?? 0;
       if (s > 0) this.notifyUnlocks(this.achievements.recordEvent({ score: s }));
     }, { injector: this.injector });
     engine.events$.subscribe(ev => {
-      if (this.tutorial.active()) {
-        if (this.tutorial.step() === 3 && (ev.kind === 'shield' || ev.kind === 'magnet')) {
-          this.tutPickups++;
-          if (this.tutPickups >= 2) this.tutorial.advanceStep();
-        }
-        if (this.tutorial.step() === 4 && (ev.kind === 'bonus' || ev.kind === 'speedBrick')) {
-          this.tutBricks++;
-          if (this.tutBricks >= 3) {
-            this.tutorial.markDone();
-            this.engine.setTutorialMode(false);
-          }
-        }
-      }
       if (ev.kind === 'coin') {
         this.wallet.addCoins(ev.value);
         this.coinsThisRun += ev.value;

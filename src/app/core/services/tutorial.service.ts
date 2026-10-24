@@ -5,7 +5,7 @@ const KEY = 'fdb_tutorial_done';
 
 @Injectable({ providedIn: 'root' })
 export class TutorialService {
-  readonly step = signal(0);     // 0 = inactive, 1..4 = steps, 5 = done this run
+  readonly step = signal(0);     // 0 = inactive, 1 = tap left/right, done after
   readonly active = signal(false);
   private done = false;
 
@@ -36,9 +36,7 @@ export class TutorialService {
   }
 
   advanceStep(): void {
-    const next = this.step() + 1;
-    if (next > 4) { this.markDone(); return; }
-    this.step.set(next);
+    this.markDone();
   }
 
   skip(): Promise<void> { return this.markDone(); }

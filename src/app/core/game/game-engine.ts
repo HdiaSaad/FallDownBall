@@ -196,21 +196,18 @@ export class GameEngine {
       this.comboMultiFraction.set(this.comboMultiTimer / COMBO_WINDOW_FRAMES);
       if (this.comboMultiTimer === 0) this.comboMulti.set(1);
     }
-    // scroll — camera follows the ball when it enters the bottom "follow zone"
+    // scroll — camera pulls the ball toward the vertical sweet spot so it
+    // sits near the middle of the screen even when falling fast
     const scrollMul = this.tutorialMode ? 0.5 : 1;
-    const followStart = this.H * 0.75;
+    const targetY = this.H * 0.72;
     let catchUp = 0;
-    if (this.hero.y > followStart) {
-      const t = Math.min(1, (this.hero.y - followStart) / (this.H - followStart));
-      // match the ball's fall speed inside the follow zone...
-      catchUp = Math.max(0, this.hero.vy) * t;
-      // ...and add a recovery pull if the ball already dropped below the viewport
+    if (this.hero.y > targetY) {
+      catchUp = (this.hero.y - targetY) * 0.2;
       if (this.hero.y > this.H) catchUp += (this.hero.y - this.H) * 0.25;
     }
     const effSpeed = (this.scrollSpeed + catchUp) * scrollMul;
     for (const b of this.boards) b.y -= effSpeed;
     for (const p of this.props)  p.y -= effSpeed;
-    // shift the ball itself by the catch-up component so it stays visible on screen
     if (catchUp > 0) this.hero.y -= catchUp * scrollMul;
     // laser: constant descent, independent of tutorial slow-mo so pace stays steady
     this.laserY += 0.075;

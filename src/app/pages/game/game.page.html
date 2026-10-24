@@ -10,12 +10,8 @@
   @if (tutorial.active()) {
     <div class="tut-overlay" (click)="$event.stopPropagation()">
       <button class="skip" (click)="skipTutorial()">{{ 'tutorial.skip' | translate }}</button>
-      @switch (tutorial.step()) {
-        @case (1) { <p>{{ 'tutorial.step1' | translate }}</p> }
-        @case (2) { <p>{{ 'tutorial.step2' | translate }}</p> }
-        @case (3) { <p>{{ 'tutorial.step3' | translate }}</p> }
-        @case (4) { <p>{{ 'tutorial.step4' | translate }}</p> }
-      }
+      <p>{{ 'tutorial.step1' | translate }}</p>
+      <div class="arrows"><span>←</span><span>→</span></div>
     </div>
   }
   @if (paused()) {
