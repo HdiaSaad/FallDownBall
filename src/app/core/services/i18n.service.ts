@@ -17,6 +17,7 @@ const T: Record<string, Record<Locale, string>> = {
   'gameOver.title':       { en: 'Game Over',           fr: 'Partie terminée' },
   'gameOver.newRecord':   { en: '★ NEW RECORD ★',      fr: '★ NOUVEAU RECORD ★' },
   'gameOver.watchAd':     { en: 'Watch Ad to Continue',fr: 'Regarder une pub pour continuer' },
+  'gameOver.adUnavailable': { en: 'Ad not available right now', fr: 'Pub indisponible pour le moment' },
   'shop.title':           { en: 'Shop',                fr: 'Boutique' },
   'shop.balls':           { en: 'Balls',               fr: 'Balles' },
   'shop.backgrounds':     { en: 'Backgrounds',         fr: 'Fonds' },

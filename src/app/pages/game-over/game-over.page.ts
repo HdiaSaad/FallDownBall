@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { IonContent } from '@ionic/angular/ion-content';
 import { IonButton } from '@ionic/angular/ion-button';
 import { IonIcon } from '@ionic/angular/ion-icon';
+import { ToastController } from '@ionic/angular/toast-controller';
 import { addIcons } from 'ionicons';
 import { refreshOutline, homeOutline, videocamOutline, shareOutline } from 'ionicons/icons';
 import { Share } from '@capacitor/share';
@@ -23,6 +24,7 @@ export class GameOverPage implements OnInit {
   i18n = inject(I18nService);
   private ads = inject(AdsService);
   private router = inject(Router);
+  private toastCtrl = inject(ToastController);
   score = 0; coins = 0; newRecord = false;
   reviveAvailable = true;
   reviving = false;
@@ -60,6 +62,13 @@ export class GameOverPage implements OnInit {
       this.router.navigate(['/game'], {
         state: { revive: true, score: this.score, coins: this.coins }
       });
+    } else {
+      const t = await this.toastCtrl.create({
+        message: this.i18n.t('gameOver.adUnavailable'),
+        duration: 2000,
+        position: 'top',
+      });
+      await t.present();
     }
   }
 }
