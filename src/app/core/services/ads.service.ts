@@ -34,7 +34,7 @@ export class AdsService {
       adSize: this.isIPad ? BannerAdSize.LARGE_BANNER : BannerAdSize.BANNER,
       position: BannerAdPosition.BOTTOM_CENTER,
       margin: 36,
-      isTesting: !environment.production,
+      isTesting: true,
     };
     try { await AdMob.showBanner(opts); console.log('[ads] banner shown'); }
     catch (e) { console.warn('showBanner failed', e); }
@@ -50,7 +50,7 @@ export class AdsService {
     this.gameOverCount = (this.gameOverCount + 1) % 3;
     if (this.gameOverCount !== 0) return;
     try {
-      const opts: AdOptions = { adId: environment.admob.interstitial, isTesting: !environment.production };
+      const opts: AdOptions = { adId: environment.admob.interstitial, isTesting: true };
       await AdMob.prepareInterstitial(opts);
       await AdMob.showInterstitial();
     } catch (e) { console.warn('showInterstitial failed', e); }
@@ -59,7 +59,7 @@ export class AdsService {
   async showRewarded(): Promise<boolean> {
     if (!this.initialized) return false;
     try {
-      const opts: RewardAdOptions = { adId: environment.admob.rewarded, isTesting: !environment.production };
+      const opts: RewardAdOptions = { adId: environment.admob.rewarded, isTesting: true };
       await Promise.race([
         AdMob.prepareRewardVideoAd(opts),
         new Promise((_, rej) => setTimeout(() => rej('timeout'), 10000)),

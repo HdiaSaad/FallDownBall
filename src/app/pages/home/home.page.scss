@@ -1,4 +1,9 @@
-.home-content { --background: linear-gradient(#0a0f1c, #1a1030); }
+.home-content {
+  --background: linear-gradient(#0a0f1c, #1a1030);
+  --overflow: hidden;
+}
+.home-content::part(scroll)::-webkit-scrollbar { display: none; width: 0; }
+.home-content::part(scroll) { scrollbar-width: none; -ms-overflow-style: none; }
 .home-wrap {
   display: flex; flex-direction: column; align-items: center; justify-content: space-between;
   min-height: 100%;
