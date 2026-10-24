@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { IonContent } from '@ionic/angular/ion-content';
 import { IonButton } from '@ionic/angular/ion-button';
@@ -7,7 +7,6 @@ import { addIcons } from 'ionicons';
 import { settingsOutline, giftOutline, shirtOutline, trophyOutline, playOutline, shareOutline } from 'ionicons/icons';
 import { Share } from '@capacitor/share';
 import { WalletService } from '../../core/services/wallet.service';
-import { AdsService } from '../../core/services/ads.service';
 import { AudioService } from '../../core/services/audio.service';
 import { I18nService } from '../../core/services/i18n.service';
 import { TranslatePipe } from '../../core/pipes/translate.pipe';
@@ -20,17 +19,15 @@ import { MissionsPanelComponent } from './missions-panel.component';
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
 })
-export class HomePage implements OnInit, OnDestroy {
+export class HomePage implements OnInit {
   wallet = inject(WalletService);
   i18n = inject(I18nService);
-  private ads = inject(AdsService);
   private audio = inject(AudioService);
   private router = inject(Router);
   constructor() {
     addIcons({ settingsOutline, giftOutline, shirtOutline, trophyOutline, playOutline, shareOutline });
   }
-  ngOnInit() { this.ads.showBanner(); this.audio.initBgm(); }
-  ngOnDestroy() { this.ads.hideBanner(); }
+  ngOnInit() { this.audio.initBgm(); }
   play() { this.router.navigateByUrl('/game'); }
 
   async shareBest() {
