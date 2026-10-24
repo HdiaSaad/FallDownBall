@@ -14,8 +14,7 @@ export class AdsService {
   private isIPad = false;
   private gameOverCount = 0;
   private attRequested = false;
-  // Temporary during fresh-AdMob-account warmup. Flip to false before final App Store build.
-  private readonly useTestAds = true;
+  private readonly useTestAds = false;
 
   async init(): Promise<void> {
     if (!Capacitor.isNativePlatform()) return;
