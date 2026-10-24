@@ -12,19 +12,25 @@ export class AdsService {
   private initialized = false;
   private isIPad = false;
   private gameOverCount = 0;
+  private attRequested = false;
 
   async init(): Promise<void> {
     if (!Capacitor.isNativePlatform()) return;
     const info = await Device.getInfo();
     this.isIPad = info.model.toLowerCase().includes('ipad');
-    await AdMob.initialize({ testingDevices: [] } as any);
+    await AdMob.initialize({});
+    this.initialized = true;
+  }
+
+  async requestAttIfNeeded(): Promise<void> {
+    if (!this.initialized || this.attRequested) return;
+    this.attRequested = true;
     try {
       const tracking = await AdMob.trackingAuthorizationStatus();
       if (tracking.status === 'notDetermined') {
         await AdMob.requestTrackingAuthorization();
       }
     } catch (e) { console.warn('ATT request failed', e); }
-    this.initialized = true;
   }
 
   async showBanner(): Promise<void> {
@@ -34,7 +40,7 @@ export class AdsService {
       adSize: this.isIPad ? BannerAdSize.LARGE_BANNER : BannerAdSize.BANNER,
       position: BannerAdPosition.BOTTOM_CENTER,
       margin: 36,
-      isTesting: true,
+      isTesting: false,
     };
     try { await AdMob.showBanner(opts); console.log('[ads] banner shown'); }
     catch (e) { console.warn('showBanner failed', e); }
@@ -50,7 +56,7 @@ export class AdsService {
     this.gameOverCount = (this.gameOverCount + 1) % 3;
     if (this.gameOverCount !== 0) return;
     try {
-      const opts: AdOptions = { adId: environment.admob.interstitial, isTesting: true };
+      const opts: AdOptions = { adId: environment.admob.interstitial, isTesting: false };
       await AdMob.prepareInterstitial(opts);
       await AdMob.showInterstitial();
     } catch (e) { console.warn('showInterstitial failed', e); }
@@ -59,7 +65,7 @@ export class AdsService {
   async showRewarded(): Promise<boolean> {
     if (!this.initialized) return false;
     try {
-      const opts: RewardAdOptions = { adId: environment.admob.rewarded, isTesting: true };
+      const opts: RewardAdOptions = { adId: environment.admob.rewarded, isTesting: false };
       await Promise.race([
         AdMob.prepareRewardVideoAd(opts),
         new Promise((_, rej) => setTimeout(() => rej('timeout'), 10000)),

@@ -111,7 +111,7 @@ export class GamePage implements OnDestroy {
           coinsThisRun: this.coinsThisRun,
         }));
         const { newRecord } = this.wallet.submitScore(ev.score);
-        this.ads.showInterstitial().then(() => {
+        this.ads.requestAttIfNeeded().then(() => this.ads.showInterstitial()).then(() => {
           this.router.navigate(['/game-over'], {
             state: { score: ev.score, coins: ev.coins, newRecord }
           });
