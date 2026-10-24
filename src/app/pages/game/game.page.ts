@@ -119,25 +119,8 @@ export class GamePage implements OnDestroy {
       }
     });
     this.hookInputs(canvas);
-    if (this.settings.controlMode() === 'tilt') this.hookTilt();
     const st = history.state as any;
     if (st?.revive) engine.seedForRevive(st.score ?? 0, st.coins ?? 0);
-  }
-
-  private tiltHandler: ((e: DeviceOrientationEvent) => void) | null = null;
-  private async hookTilt() {
-    const DOE = (window as any).DeviceOrientationEvent;
-    if (!DOE) return;
-    if (typeof DOE.requestPermission === 'function') {
-      try {
-        const res = await DOE.requestPermission();
-        if (res !== 'granted') return;
-      } catch { return; }
-    }
-    this.tiltHandler = (e: DeviceOrientationEvent) => {
-      if (typeof e.gamma === 'number') this.engine.setTilt(e.gamma);
-    };
-    window.addEventListener('deviceorientation', this.tiltHandler);
   }
 
   private hookInputs(canvas: HTMLCanvasElement) {
@@ -213,7 +196,6 @@ export class GamePage implements OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.tiltHandler) window.removeEventListener('deviceorientation', this.tiltHandler);
     this.engine?.destroy();
   }
 }

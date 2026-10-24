@@ -6,8 +6,30 @@
 }
 .record { color: #ffd54f; font-weight: 700; text-align: center; animation: pulse 1s infinite alternate; }
 h1 { text-align: center; margin: 0; font-size: 36px; }
-.stats { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.stats div { display: flex; gap: 8px; font-size: 18px; }
-.stats span { opacity: .7; width: 60px; text-align: right; }
+.stats {
+  display: flex; flex-direction: column; align-items: stretch; gap: 10px;
+  max-width: 320px; width: 100%; margin: 8px auto 0;
+}
+.stat-row {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+.stat-row .label {
+  font-size: 13px; letter-spacing: 1.2px; text-transform: uppercase;
+  opacity: 0.55; flex: 1;
+}
+.stat-row .value { font-size: 26px; font-weight: 800; color: #fff; }
+.stat-row.best {
+  border-color: rgba(255, 213, 79, 0.4);
+  background: linear-gradient(90deg, rgba(255, 213, 79, 0.08), rgba(255, 213, 79, 0.02));
+}
+.stat-row.best .value { color: #ffd54f; text-shadow: 0 0 10px rgba(255, 213, 79, 0.5); }
+.stat-row .earned {
+  font-size: 22px; font-weight: 800; color: #4fe3c1;
+  text-shadow: 0 0 8px rgba(79, 227, 193, 0.5);
+}
 .revive-btn { --background: #ff6e6e; --color: #fff; font-weight: 700; }
 @keyframes pulse { to { opacity: .5; } }

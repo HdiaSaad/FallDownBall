@@ -47,8 +47,6 @@ const T: Record<string, Record<Locale, string>> = {
   'settings.sound':       { en: 'Sound',               fr: 'Son' },
   'settings.music':       { en: 'Music',               fr: 'Musique' },
   'settings.vibration':   { en: 'Vibration',           fr: 'Vibration' },
-  'settings.touch':       { en: 'Touch controls',      fr: 'Contrôles tactiles' },
-  'settings.tilt':        { en: 'Tilt controls',       fr: 'Contrôles par inclinaison' },
   'settings.language':    { en: 'Language',            fr: 'Langue' },
   'settings.lang.en':     { en: 'English',             fr: 'Anglais' },
   'settings.lang.fr':     { en: 'French',              fr: 'Français' },

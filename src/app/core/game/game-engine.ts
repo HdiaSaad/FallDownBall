@@ -51,7 +51,6 @@ export class GameEngine {
   private saveUsed = false;
   private rafId = 0;
   private keys = { l: false, r: false };
-  private tiltVx = 0;
   private floatTexts: Array<{x:number;y:number;vy:number;life:number;max:number;text:string;color:string;size:number}> = [];
   private wasInAir = true;
   private stepsSinceLanding = 0;
@@ -122,10 +121,6 @@ export class GameEngine {
   }
 
   setInput(left: boolean, right: boolean) { this.keys.l = left; this.keys.r = right; }
-  setTilt(gamma: number) {
-    // gamma -90..90 → vx scaled
-    this.tiltVx = Math.max(-MOVE, Math.min(MOVE, gamma / 10));
-  }
 
   private spawnStarterBoards() {
     // First board: force gap to the edge so the ball always lands on spawn.
@@ -211,6 +206,12 @@ export class GameEngine {
     if (catchUp > 0) this.hero.y -= catchUp * scrollMul;
     // laser: constant descent, independent of tutorial slow-mo so pace stays steady
     this.laserY += 0.075;
+    // when the ball outruns the camera (catchUp > 0) and the laser has
+    // been visible for a bit (past 20% of the screen), drift it back up
+    // so the player feels they gained ground on it
+    if (catchUp > 0 && this.laserY > this.H * 0.2) {
+      this.laserY -= catchUp * 0.9;
+    }
     const boosted = this.speedBoost > 0;
     if (boosted) this.speedBoost--;
 
@@ -229,7 +230,6 @@ export class GameEngine {
     let vx = 0;
     if (this.keys.l) vx -= move;
     if (this.keys.r) vx += move;
-    if (vx === 0 && this.tiltVx !== 0) vx = this.tiltVx * (boosted ? SPEED_BOOST_MULT : 1);
     this.hero.vx = vx !== 0 ? vx : this.hero.vx * 0.82;
     this.hero.x += this.hero.vx;
     clampX(this.hero, W);
@@ -295,13 +295,22 @@ export class GameEngine {
         this.comboMultiFraction.set(1);
         this.events$.next({ kind: 'combo', steps: n, wooow: isCombo });
         this.opts.onSoundEvent?.('combo');
+        // reward: nudge the laser back so it can't inexorably catch up —
+        // only once the laser has become a real threat (past 20%), and
+        // only a little so the pressure still builds over time
+        let laserPush = 12;
         if (isCombo) {
           this.wooowCount++;
+          laserPush = 25;
           if (this.wooowCount === 3) {
             this.spawnFloatText('PERFECT!', W/2, this.H/2 - 140, 72, '#ff2d55');
             this.events$.next({ kind: 'perfectRun' });
             this.opts.onSoundEvent?.('perfectRun');
+            laserPush = 50;
           }
+        }
+        if (this.laserY > this.H * 0.2) {
+          this.laserY = Math.max(this.H * 0.1, this.laserY - laserPush);
         }
       }
       this.stepsSinceLanding = 0;

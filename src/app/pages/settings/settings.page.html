@@ -23,13 +23,6 @@
     </ion-item>
   </ion-list>
   <ion-list inset="true">
-    <ion-radio-group [value]="settings.controlMode()"
-                     (ionChange)="update('controlMode', $event.detail.value)">
-      <ion-item><ion-radio value="touch">{{ 'settings.touch' | translate }}</ion-radio></ion-item>
-      <ion-item><ion-radio value="tilt">{{ 'settings.tilt' | translate }}</ion-radio></ion-item>
-    </ion-radio-group>
-  </ion-list>
-  <ion-list inset="true">
     <ion-item lines="full">
       <ion-label><strong>{{ 'settings.language' | translate }}</strong></ion-label>
     </ion-item>

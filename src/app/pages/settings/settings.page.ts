@@ -32,7 +32,7 @@ export class SettingsPage {
   i18n = inject(I18nService);
   private router = inject(Router);
 
-  async update<K extends 'sound'|'music'|'vibration'|'controlMode'>(key: K, value: any) {
+  async update<K extends 'sound'|'music'|'vibration'>(key: K, value: any) {
     (this.settings[key] as any).set(value);
     await this.settings.save();
   }

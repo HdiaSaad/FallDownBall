@@ -3,9 +3,18 @@
     @if (newRecord) { <div class="record">{{ 'gameOver.newRecord' | translate }}</div> }
     <h1>{{ 'gameOver.title' | translate }}</h1>
     <div class="stats">
-      <div><span>{{ 'common.score' | translate }}</span><b>{{ score }}</b></div>
-      <div><span>{{ 'common.best' | translate }}</span><b>{{ wallet.best() }}</b></div>
-      <div><span>{{ 'common.coins' | translate }}</span><b>+{{ coins }} ({{ wallet.coins() }})</b></div>
+      <div class="stat-row">
+        <span class="label">{{ 'common.score' | translate }}</span>
+        <b class="value">{{ score }}</b>
+      </div>
+      <div class="stat-row best">
+        <span class="label">{{ 'common.best' | translate }}</span>
+        <b class="value">{{ wallet.best() }}</b>
+      </div>
+      <div class="stat-row coins">
+        <span class="label">{{ 'common.coins' | translate }}</span>
+        <b class="earned">+{{ coins }}</b>
+      </div>
     </div>
     @if (reviveAvailable) {
       <ion-button class="revive-btn" (click)="revive()" [disabled]="reviving">
