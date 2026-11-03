@@ -8,9 +8,6 @@ workflows:
         - app_store_connect
       node: 22.22.3
       xcode: latest
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.saad.skyfallball
     scripts:
       - name: Install node deps
         script: npm ci
@@ -51,13 +48,16 @@ workflows:
           xcode-project build-ipa \
             --archive-path "$CM_BUILD_DIR/App.xcarchive" \
             --export-ipaPath "$CM_BUILD_DIR"
+      - name: Upload to TestFlight
+        script: |
+          app-store-connect publish \
+            --path "$CM_BUILD_DIR/**/*.ipa" \
+            --platform IOS \
+            --max-build-processing-wait 0
     artifacts:
       - $CM_BUILD_DIR/**/*.ipa
       - $CM_BUILD_DIR/**/*.dSYM.zip
     publishing:
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
       email:
         recipients:
           - saad.hdia@gmail.com
