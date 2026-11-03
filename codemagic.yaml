@@ -36,12 +36,14 @@ workflows:
       - name: Build and export signed IPA
         script: |
           set -ex
-          # Extract DEVELOPMENT_TEAM from the downloaded provisioning profile
-          PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -1)
-          echo "Profile: $PROFILE_PATH"
-          TEAM_ID=$(security cms -D -i "$PROFILE_PATH" | python3 -c "import sys, plistlib; data = plistlib.loads(sys.stdin.buffer.read()); print(data.get('TeamIdentifier', [''])[0])")
+          # Try pbxproj first (use-profiles sets it), fall back to find
+          TEAM_ID=$(grep -m1 'DEVELOPMENT_TEAM = [A-Z0-9]' ios/App/App.xcodeproj/project.pbxproj | sed 's/.*DEVELOPMENT_TEAM = \([A-Z0-9]*\);.*/\1/' || true)
+          if [ -z "$TEAM_ID" ]; then
+            PROFILE_PATH=$(find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" 2>/dev/null | head -1)
+            echo "Profile: $PROFILE_PATH"
+            TEAM_ID=$(security cms -D -i "$PROFILE_PATH" | python3 -c "import sys, plistlib; data = plistlib.loads(sys.stdin.buffer.read()); print(data.get('TeamIdentifier', [''])[0])")
+          fi
           echo "Team ID: $TEAM_ID"
-          # Archive with explicit team + manual signing
           cd ios/App
           xcodebuild archive \
             -project App.xcodeproj \
