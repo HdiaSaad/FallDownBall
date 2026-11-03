@@ -40,6 +40,7 @@
 .stat { display: flex; flex-direction: column; align-items: center; color: #eee; }
 .stat .label { font-size: 12px; opacity: .6; }
 .stat .value { font-size: 24px; font-weight: 700; }
+app-missions-panel { width: 100%; }
 .play-btn { width: 100%; max-width: 320px; --background: #ffd54f; --color: #000; font-weight: 700; }
 .icon-row { display: flex; gap: 20px; }
 .icon-row ion-icon { color: #fff; font-size: 26px; }
