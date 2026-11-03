@@ -22,11 +22,13 @@ import { TranslatePipe } from '../../core/pipes/translate.pipe';
               <div class="progress-bar">
                 <div class="fill" [style.width.%]="(m.progress / m.target) * 100"></div>
               </div>
-              <small>{{ m.progress }} / {{ m.target }}</small>
+              <div class="info-footer">
+                <small>{{ m.progress }} / {{ m.target }}</small>
+                <ion-button size="small" [disabled]="m.claimed || m.progress < m.target" (click)="claim(m)">
+                  {{ (m.claimed ? 'mission.claimed' : 'mission.claim') | translate }}
+                </ion-button>
+              </div>
             </div>
-            <ion-button size="small" [disabled]="m.claimed || m.progress < m.target" (click)="claim(m)">
-              {{ (m.claimed ? 'mission.claimed' : 'mission.claim') | translate }}
-            </ion-button>
           </div>
         }
       </div>
