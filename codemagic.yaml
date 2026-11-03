@@ -35,10 +35,33 @@ workflows:
           agvtool new-version -all $((LATEST + 1))
       - name: Build and export signed IPA
         script: |
-          ls ios/App/
+          set -ex
+          # Extract DEVELOPMENT_TEAM from the downloaded provisioning profile
+          PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -1)
+          echo "Profile: $PROFILE_PATH"
+          TEAM_ID=$(security cms -D -i "$PROFILE_PATH" | python3 -c "
+import sys, plistlib
+data = plistlib.loads(sys.stdin.buffer.read())
+print(data.get('TeamIdentifier', [''])[0])
+")
+          echo "Team ID: $TEAM_ID"
+          # Archive with explicit team + manual signing
+          cd ios/App
+          xcodebuild archive \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$CM_BUILD_DIR/App.xcarchive" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="iPhone Distribution" \
+            OTHER_CODE_SIGN_FLAGS="--keychain ~/Library/Keychains/cms-build.keychain" \
+            2>&1 | tail -60
+          # Export IPA
           xcode-project build-ipa \
-            --project ios/App/App.xcodeproj \
-            --scheme App
+            --archive-path "$CM_BUILD_DIR/App.xcarchive" \
+            --export-ipaPath "$CM_BUILD_DIR"
       - name: Upload to TestFlight
         script: |
           app-store-connect publish \
