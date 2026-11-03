@@ -35,10 +35,10 @@ workflows:
           agvtool new-version -all $((LATEST + 1))
       - name: Build and export signed IPA
         script: |
+          ls ios/App/
           xcode-project build-ipa \
-            --workspace ios/App/App.xcworkspace \
-            --scheme App \
-            --config Release
+            --project ios/App/App.xcodeproj \
+            --scheme App
       - name: Upload to TestFlight
         script: |
           app-store-connect publish \
