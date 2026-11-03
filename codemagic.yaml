@@ -22,13 +22,15 @@ workflows:
       - name: Fetch signing files
         script: |
           keychain initialize
+          openssl genrsa -out /tmp/dist_key.pem 2048
+          app-store-connect certificates create \
+            --type IOS_DISTRIBUTION \
+            --certificate-key /tmp/dist_key.pem \
+            --save
           app-store-connect fetch-signing-files com.saad.skyfallball \
             --platform IOS \
             --type IOS_APP_STORE \
             --create
-          app-store-connect create-certificate \
-            --type IOS_DISTRIBUTION \
-            --save
           keychain add-certificates
           xcode-project use-profiles
       - name: Increment build number
@@ -39,12 +41,13 @@ workflows:
       - name: Build and export signed IPA
         script: |
           set -ex
-          # Try pbxproj first (use-profiles sets it), fall back to find
-          TEAM_ID=$(grep -m1 'DEVELOPMENT_TEAM = [A-Z0-9]' ios/App/App.xcodeproj/project.pbxproj | sed 's/.*DEVELOPMENT_TEAM = \([A-Z0-9]*\);.*/\1/' || true)
+          # Read TEAM_ID from first available provisioning profile
+          PROFILE_PATH=$(find "$HOME" -name "*.mobileprovision" 2>/dev/null | head -1)
+          echo "Profile: $PROFILE_PATH"
+          TEAM_ID=$(security cms -D -i "$PROFILE_PATH" 2>/dev/null | python3 -c "import sys, plistlib; data = plistlib.loads(sys.stdin.buffer.read()); print(data.get('TeamIdentifier', [''])[0])" 2>/dev/null || true)
+          # Fallback: read from pbxproj
           if [ -z "$TEAM_ID" ]; then
-            PROFILE_PATH=$(find "$HOME/Library/MobileDevice/Provisioning Profiles" -name "*.mobileprovision" 2>/dev/null | head -1)
-            echo "Profile: $PROFILE_PATH"
-            TEAM_ID=$(security cms -D -i "$PROFILE_PATH" | python3 -c "import sys, plistlib; data = plistlib.loads(sys.stdin.buffer.read()); print(data.get('TeamIdentifier', [''])[0])")
+            TEAM_ID=$(grep -m1 'DEVELOPMENT_TEAM' ios/App/App.xcodeproj/project.pbxproj | sed 's/.*= *//;s/ *;.*//' | tr -d ' "' || true)
           fi
           echo "Team ID: $TEAM_ID"
           cd ios/App
