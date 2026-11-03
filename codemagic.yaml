@@ -33,21 +33,12 @@ workflows:
           cd ios/App
           LATEST=$(app-store-connect get-latest-testflight-build-number com.saad.skyfallball --platform IOS 2>/dev/null || echo 0)
           agvtool new-version -all $((LATEST + 1))
-      - name: Build and archive
-        script: |
-          cd ios/App
-          xcodebuild archive \
-            -project App.xcodeproj \
-            -scheme App \
-            -configuration Release \
-            -destination 'generic/platform=iOS' \
-            -archivePath "$CM_BUILD_DIR/App.xcarchive" \
-            -allowProvisioningUpdates
-      - name: Export signed IPA
+      - name: Build and export signed IPA
         script: |
           xcode-project build-ipa \
-            --archive-path "$CM_BUILD_DIR/App.xcarchive" \
-            --export-ipaPath "$CM_BUILD_DIR"
+            --workspace ios/App/App.xcworkspace \
+            --scheme App \
+            --config Release
       - name: Upload to TestFlight
         script: |
           app-store-connect publish \
