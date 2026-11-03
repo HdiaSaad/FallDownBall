@@ -39,11 +39,7 @@ workflows:
           # Extract DEVELOPMENT_TEAM from the downloaded provisioning profile
           PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -1)
           echo "Profile: $PROFILE_PATH"
-          TEAM_ID=$(security cms -D -i "$PROFILE_PATH" | python3 -c "
-import sys, plistlib
-data = plistlib.loads(sys.stdin.buffer.read())
-print(data.get('TeamIdentifier', [''])[0])
-")
+          TEAM_ID=$(security cms -D -i "$PROFILE_PATH" | python3 -c "import sys, plistlib; data = plistlib.loads(sys.stdin.buffer.read()); print(data.get('TeamIdentifier', [''])[0])")
           echo "Team ID: $TEAM_ID"
           # Archive with explicit team + manual signing
           cd ios/App
