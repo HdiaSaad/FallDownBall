@@ -25,7 +25,7 @@ workflows:
           openssl genrsa -out /tmp/dist_key.pem 2048
           app-store-connect certificates create \
             --type IOS_DISTRIBUTION \
-            --certificate-key /tmp/dist_key.pem \
+            --certificate-key "$(cat /tmp/dist_key.pem)" \
             --save
           app-store-connect fetch-signing-files com.saad.skyfallball \
             --platform IOS \
@@ -41,15 +41,6 @@ workflows:
       - name: Build and export signed IPA
         script: |
           set -ex
-          # Read TEAM_ID from first available provisioning profile
-          PROFILE_PATH=$(find "$HOME" -name "*.mobileprovision" 2>/dev/null | head -1)
-          echo "Profile: $PROFILE_PATH"
-          TEAM_ID=$(security cms -D -i "$PROFILE_PATH" 2>/dev/null | python3 -c "import sys, plistlib; data = plistlib.loads(sys.stdin.buffer.read()); print(data.get('TeamIdentifier', [''])[0])" 2>/dev/null || true)
-          # Fallback: read from pbxproj
-          if [ -z "$TEAM_ID" ]; then
-            TEAM_ID=$(grep -m1 'DEVELOPMENT_TEAM' ios/App/App.xcodeproj/project.pbxproj | sed 's/.*= *//;s/ *;.*//' | tr -d ' "' || true)
-          fi
-          echo "Team ID: $TEAM_ID"
           cd ios/App
           xcodebuild archive \
             -project App.xcodeproj \
@@ -57,15 +48,12 @@ workflows:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$CM_BUILD_DIR/App.xcarchive" \
-            DEVELOPMENT_TEAM="$TEAM_ID" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="iPhone Distribution" \
-            OTHER_CODE_SIGN_FLAGS="--keychain ~/Library/Keychains/cms-build.keychain" \
-            2>&1 | tail -60
-          # Export IPA
-          xcode-project build-ipa \
-            --archive-path "$CM_BUILD_DIR/App.xcarchive" \
-            --export-ipaPath "$CM_BUILD_DIR"
+            2>&1 | tail -80
+          xcodebuild -exportArchive \
+            -archivePath "$CM_BUILD_DIR/App.xcarchive" \
+            -exportPath "$CM_BUILD_DIR" \
+            -exportOptionsPlist /Users/builder/export_options.plist \
+            2>&1 | tail -30
       - name: Upload to TestFlight
         script: |
           app-store-connect publish \
