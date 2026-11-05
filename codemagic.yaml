@@ -32,6 +32,11 @@ workflows:
             --certificate-key "$(cat /tmp/dist_key.pem)" \
             --save
           keychain add-certificates
+          app-store-connect fetch-signing-files com.saad.skyfallball \
+            --platform IOS \
+            --type IOS_APP_STORE \
+            --create
+          xcode-project use-profiles
       - name: Increment build number
         script: |
           cd ios/App
@@ -58,18 +63,12 @@ workflows:
             -destination 'generic/platform=iOS' \
             -archivePath "$CM_BUILD_DIR/App.xcarchive" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath /tmp/AuthKey.p8 \
-            -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="iPhone Distribution"
           xcodebuild -exportArchive \
             -archivePath "$CM_BUILD_DIR/App.xcarchive" \
             -exportPath "$CM_BUILD_DIR/ipa" \
-            -exportOptionsPlist /tmp/ExportOptions.plist \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath /tmp/AuthKey.p8 \
-            -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
+            -exportOptionsPlist /Users/builder/export_options.plist
       - name: Upload to TestFlight
         script: |
           app-store-connect publish \
