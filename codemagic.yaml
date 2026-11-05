@@ -23,11 +23,11 @@ workflows:
         script: |
           keychain initialize
           echo "$DIST_CERT_PRIVATE_KEY" > /tmp/dist_key.pem
-          app-store-connect certificates list \
+          app-store-connect certificates create \
             --type IOS_DISTRIBUTION \
             --certificate-key "$(cat /tmp/dist_key.pem)" \
-            --save 2>/dev/null || \
-          app-store-connect certificates create \
+            --save || \
+          app-store-connect certificates list \
             --type IOS_DISTRIBUTION \
             --certificate-key "$(cat /tmp/dist_key.pem)" \
             --save
