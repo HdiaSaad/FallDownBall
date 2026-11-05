@@ -22,7 +22,11 @@ workflows:
       - name: Fetch signing files
         script: |
           keychain initialize
-          openssl genrsa -out /tmp/dist_key.pem 2048
+          echo "$DIST_CERT_PRIVATE_KEY" > /tmp/dist_key.pem
+          app-store-connect certificates list \
+            --type IOS_DISTRIBUTION \
+            --certificate-key "$(cat /tmp/dist_key.pem)" \
+            --save 2>/dev/null || \
           app-store-connect certificates create \
             --type IOS_DISTRIBUTION \
             --certificate-key "$(cat /tmp/dist_key.pem)" \
@@ -37,6 +41,7 @@ workflows:
         script: |
           set -e
           echo "$APP_STORE_CONNECT_PRIVATE_KEY" > /tmp/AuthKey.p8
+          echo "$DIST_CERT_PRIVATE_KEY" > /tmp/dist_key.pem
           TEAM_ID=$(security find-identity -v -p codesigning | grep "iPhone Distribution" | head -1 | grep -oE '\([A-Z0-9]+\)' | tr -d '()')
           echo "Team ID: $TEAM_ID"
           printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' \
