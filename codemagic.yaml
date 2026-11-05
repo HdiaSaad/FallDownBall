@@ -51,17 +51,17 @@ workflows:
             2>&1 | tail -80
           xcodebuild -exportArchive \
             -archivePath "$CM_BUILD_DIR/App.xcarchive" \
-            -exportPath "$CM_BUILD_DIR" \
+            -exportPath "$CM_BUILD_DIR/ipa" \
             -exportOptionsPlist /Users/builder/export_options.plist \
             2>&1 | tail -30
       - name: Upload to TestFlight
         script: |
           app-store-connect publish \
-            --path "$CM_BUILD_DIR/**/*.ipa" \
+            --path "$CM_BUILD_DIR/ipa/*.ipa" \
             --platform IOS \
             --max-build-processing-wait 0
     artifacts:
-      - $CM_BUILD_DIR/**/*.ipa
+      - $CM_BUILD_DIR/ipa/*.ipa
       - $CM_BUILD_DIR/**/*.dSYM.zip
     publishing:
       email:
