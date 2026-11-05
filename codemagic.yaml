@@ -27,11 +27,11 @@ workflows:
             --type IOS_DISTRIBUTION \
             --certificate-key "$(cat /tmp/dist_key.pem)" \
             --save
+          keychain add-certificates
           app-store-connect fetch-signing-files com.saad.skyfallball \
             --platform IOS \
             --type IOS_APP_STORE \
             --create
-          keychain add-certificates
           xcode-project use-profiles
       - name: Increment build number
         script: |
@@ -40,7 +40,9 @@ workflows:
           agvtool new-version -all $((LATEST + 1))
       - name: Build and export signed IPA
         script: |
-          set -ex
+          set -e
+          TEAM_ID=$(security find-identity -v -p codesigning | grep "iPhone Distribution" | head -1 | grep -oE '\([A-Z0-9]+\)' | tr -d '()')
+          echo "Team ID: $TEAM_ID"
           cd ios/App
           xcodebuild archive \
             -project App.xcodeproj \
@@ -48,12 +50,11 @@ workflows:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$CM_BUILD_DIR/App.xcarchive" \
-            2>&1 | tail -80
+            DEVELOPMENT_TEAM="$TEAM_ID"
           xcodebuild -exportArchive \
             -archivePath "$CM_BUILD_DIR/App.xcarchive" \
             -exportPath "$CM_BUILD_DIR/ipa" \
-            -exportOptionsPlist /Users/builder/export_options.plist \
-            2>&1 | tail -30
+            -exportOptionsPlist /Users/builder/export_options.plist
       - name: Upload to TestFlight
         script: |
           app-store-connect publish \
